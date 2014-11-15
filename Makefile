@@ -34,5 +34,7 @@ cover: test
 	julia -e 'Pkg.init(); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
 
 clean:
+	@echo "\nRemoving the following files:"
+	@find . -name "*.cov" -exec rm -v {} \;
 
 .PHONY: test cover clean
