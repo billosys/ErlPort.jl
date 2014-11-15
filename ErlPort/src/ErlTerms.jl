@@ -31,11 +31,11 @@ export decode, IncompleteData
 type IncompleteData <: Exception end
 
 function decode(string::ASCIIString)
-	string
+    string
 end
 
 function decode(unsupported)
-	throw(IncompleteData())
+    throw(IncompleteData())
 end
 
 end
