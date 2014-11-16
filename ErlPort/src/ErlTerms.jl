@@ -27,7 +27,7 @@
 module ErlTerms
 
 export IncompleteData, UnknownProtocolVersion, InvalidCompressedTag,
-UnsupportedData,
+UnsupportedData, UnsupportedType
 decode, getindex, length
 
 import Base.length
@@ -65,7 +65,7 @@ function decode(bytes::Array{Uint8,1})
 end
 
 function decode(unsupported)
-    throw(IncompleteData(unsupported))
+    throw(UnsupportedType(unsupported))
 end
 
 

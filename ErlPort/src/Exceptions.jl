@@ -13,3 +13,7 @@ end
 type UnsupportedData <: Exception
     var
 end
+
+type UnsupportedType <: Exception
+    var
+end
