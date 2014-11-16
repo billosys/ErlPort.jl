@@ -37,4 +37,8 @@ clean:
 	@echo "\nRemoving the following files:"
 	@find . -name "*.cov" -exec rm -v {} \;
 
-.PHONY: test cover clean
+repl:
+	JULIA_LOAD_PATH=$(shell pwd) \
+	julia
+
+.PHONY: test cover clean repl
