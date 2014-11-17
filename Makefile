@@ -27,11 +27,7 @@
 
 test:
 	JULIA_LOAD_PATH=$(shell pwd) \
-	julia --code-coverage test/runtests.jl
-
-cover: test
-	JULIA_LOAD_PATH=$(shell pwd) \
-	julia -e 'Pkg.init(); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
+	julia -e 'Pkg.test("ErlPort");'
 
 clean:
 	@echo "\nRemoving the following files:"
@@ -41,11 +37,7 @@ repl:
 	JULIA_LOAD_PATH=$(shell pwd) \
 	julia
 
-deps2:
-	JULIA_LOAD_PATH=$(shell pwd) \
-	julia -e 'Pkg.init(); Pkg.resolve(); Pkg.add("ErlPort");'
-
-deps:
-	 - julia -e 'Pkg.init(); run(`ln -s $$(pwd()) $$(Pkg.dir("ErlPort"))`); Pkg.pin("ErlPort"); Pkg.resolve()'
+setup:
+	julia -e 'Pkg.init(); run(`ln -s $$(pwd()) $$(Pkg.dir("ErlPort"))`); Pkg.resolve()'
 
 .PHONY: test cover clean repl deps
