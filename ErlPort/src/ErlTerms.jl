@@ -55,13 +55,16 @@ function decode(bytes::Array{Uint8,1})
         throw(IncompleteData(bytes))
     end
     if bytes[2] == b"P"
-        # compressed term
-        if length(bytes) < 16
-            throw(IncompleteData(bytes))
-        end
-        # XXX add support for decompressing
+        return decodecompressed(bytes)
     end
     decodeterm(bytes[2:end])
+end
+
+function decodecompressed(bytes::Array{Uint8,1})
+    if length(bytes) < 16
+        throw(IncompleteData(bytes))
+    end
+    # XXX add support for decompressing
 end
 
 function decode(unsupported)
