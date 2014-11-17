@@ -30,7 +30,7 @@ include("Exceptions.jl")
 include("CLI.jl")
 include("Erlang.jl")
 include("ErlProto.jl")
-include("ErlTerms.jl")
+include("ErlTerms/ErlTerms.jl")
 include("StdIO.jl")
 
 end
