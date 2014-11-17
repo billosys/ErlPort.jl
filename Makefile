@@ -41,4 +41,11 @@ repl:
 	JULIA_LOAD_PATH=$(shell pwd) \
 	julia
 
-.PHONY: test cover clean repl
+deps2:
+	JULIA_LOAD_PATH=$(shell pwd) \
+	julia -e 'Pkg.init(); Pkg.resolve(); Pkg.add("ErlPort");'
+
+deps:
+	 - julia -e 'Pkg.init(); run(`ln -s $$(pwd()) $$(Pkg.dir("ErlPort"))`); Pkg.pin("ErlPort"); Pkg.resolve()'
+
+.PHONY: test cover clean repl deps
