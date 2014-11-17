@@ -26,6 +26,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 module ErlPort
 
+include("Exceptions.jl")
 include("CLI.jl")
 include("Erlang.jl")
 include("ErlProto.jl")
