@@ -26,8 +26,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 module Decode
 
-export decode
+export decode, decodeterm, decompressterm
 
+using Zlib
 using ErlPort.Exceptions
 
 function decode(bytes::Array{Uint8,1})
@@ -40,23 +41,29 @@ function decode(bytes::Array{Uint8,1})
     if length(bytes) < 4
         throw(IncompleteData(bytes))
     end
-    if bytes[2] == b"P"
-        return decodecompressed(bytes)
+    if bytes[2] == b"P"[1]
+        decodeterm(decompressterm(bytes))
     end
     decodeterm(bytes[2:end])
-end
-
-function decodecompressed(bytes::Array{Uint8,1})
-    if length(bytes) < 16
-        throw(IncompleteData(bytes))
-    end
-    # XXX add support for decompressing
 end
 
 function decode(unsupported)
     throw(UnsupportedType(unsupported))
 end
 
+function decompressterm(bytes::Array{Uint8,1})
+    if length(bytes) < 16
+        throw(IncompleteData(bytes))
+    end
+    sent_len = int(reinterpret(Int32, reverse(bytes[3:6]))[1])
+    term = decompress(bytes[7:end])
+    actual_len = length(term)
+    if actual_len != sent_len
+        msg = "Header declared $sent_len bytes but got $actual_len bytes."
+        throw(InvalidCompressedTag(msg))
+    end
+    return term
+end
 
 function decodeterm(bytes::Array{Uint8,1})
     if length(bytes) == 0
