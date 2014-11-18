@@ -37,7 +37,7 @@ repl:
 	JULIA_LOAD_PATH=$(shell pwd) \
 	julia
 
-setup:
+dev:
 	julia -e 'Pkg.init(); run(`ln -s $$(pwd()) $$(Pkg.dir("ErlPort"))`); Pkg.resolve()'
 
 .PHONY: test cover clean repl deps

@@ -9,7 +9,7 @@ TBD
 In the cloned repo, just run the following:
 
 ```bash
-$ make setup
+$ make dev
 ```
 
 And then:
