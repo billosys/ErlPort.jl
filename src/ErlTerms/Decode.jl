@@ -26,7 +26,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 module Decode
 
-export decode, decodeterm, decompressterm
+export decode, decodeterm, decodestring
+export decompressterm, int2unpack, int4unpack
 
 using Zlib
 using ErlPort.Exceptions
@@ -42,23 +43,31 @@ function decode(bytes::Array{Uint8,1})
         throw(IncompleteData(bytes))
     end
     if bytes[2] == b"P"[1]
-        decodeterm(decompressterm(bytes))
+        return decodeterm(decompressterm(bytes))
     end
-    decodeterm(bytes[2:end])
+    return decodeterm(bytes[2:end])
 end
 
 function decode(unsupported)
     throw(UnsupportedType(unsupported))
 end
 
+function int4unpack(bytes)
+    int(reinterpret(Int32, reverse(bytes))[1])
+end
+
+function int2unpack(bytes)
+    int(reinterpret(Int8, reverse(bytes))[1])
+end
+
 function decompressterm(bytes::Array{Uint8,1})
     if length(bytes) < 16
         throw(IncompleteData(bytes))
     end
-    sent_len = int(reinterpret(Int32, reverse(bytes[3:6]))[1])
+    sentlen = int4unpack(bytes[3:6])
     term = decompress(bytes[7:end])
-    actual_len = length(term)
-    if actual_len != sent_len
+    actuallen = length(term)
+    if actuallen != sentlen
         msg = "Header declared $sent_len bytes but got $actual_len bytes."
         throw(InvalidCompressedTag(msg))
     end
@@ -78,7 +87,7 @@ function decodeterm(bytes::Array{Uint8,1})
         return bytes
     elseif tag == 107
         # STRING_EXT
-        return bytes
+        return decodestring(bytes)
     elseif tag in b"lhi"
         # LIST_EXT, SMALL_TUPLE_EXT, LARGE_TUPLE_EXT
         return bytes
@@ -106,24 +115,39 @@ function decodeterm(bytes::Array{Uint8,1})
 end
 
 function decodeatom(bytes::Array{Uint8,1})
-    ln = length(bytes)
+    len = length(bytes)
     if ln < 3
         throw(IncompleteData(bytes))
     end
-    unpackedln = 0
-    if ln < unpackedln
+    unpackedlen = int2unpack(bytes[2:3]) + 3
+    if len < unpackedlen
         throw(IncompleteData(bytes))
     end
-    name = bytes[3:unpackedln]
+    name = bytes[3:unpackedlen]
     if name == b"true"
-        return true, bytes[unpackedln:end]
+        return true, bytes[unpackedlen:end]
     elseif name == b"false"
-        return false, bytes[unpackedln:end]
+        return false, bytes[unpackedlen:end]
     elseif name == b"undefined"
-        return None, bytes[unpackedln:end]
+        return None, bytes[unpackedlen:end]
     else
-        return symbol(name), bytes[unpackedln:end]
+        return symbol(name), bytes[unpackedlen:end]
     end
+end
+
+function decodenil(bytes::Array{Uint8,1})
+end
+
+function decodestring(bytes::Array{Uint8,1})
+    len = length(bytes)
+    if len < 3
+        throw(IncompleteData(bytes))
+    end
+    unpackedlen = int2unpack(bytes[2:3]) + 3
+    if len < unpackedlen
+        throw(IncompleteData(bytes))
+    end
+    bytes[4:unpackedlen], bytes[unpackedlen+1:end]
 end
 
 end

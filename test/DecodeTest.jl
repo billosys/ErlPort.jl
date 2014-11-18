@@ -1,7 +1,28 @@
-using Base.Test
-
 using ErlPort.Exceptions
 using ErlPort.ErlTerms.Decode
+
+include("Testing.jl")
+
+# data for use by tests
+lenheader1 = b"\0\0\0\x17"
+lenheader2 = b"\0\x14"
+badsizecompdata = vcat(b"\x83P\0\0\0\x16\x78\xda\xcb\x66\x10\x49\xc1\2\0\x5d",
+					   b"\x60\x08\x50")
+compdata1 = b"\x83P\0\0\0\x17\x78\xda\xcb\x66\x10\x49\xc1\2\0\x5d\x60\x08\x50"
+compdata2 = vcat(b"\x83P\0\0\0\x17\x78\xda\xcb\x66\x10\x49\xc1\2\0\x5d\x60",
+				 b"\x08\x50tail")
+
+# tests for supporting functions
+testcase() do
+	@test int4unpack(lenheader1) == 23
+	@test int2unpack(lenheader2) == 20
+end
+
+testcase() do
+	expected = [107,0,20,100,100,100,100,100,100,100,100,100,100,100,100,100,100,
+    	        100,100,100,100,100,100]
+	@test decompressterm(compdata1) == expected
+end
 
 # basic decode errors
 #@test_throws IncompleteData decode("")
@@ -23,6 +44,9 @@ using ErlPort.ErlTerms.Decode
 # decode empty list
 
 # decode string list
+@test_throws IncompleteData decodestring(b"")
+@test_throws IncompleteData decodestring(b"\0")
+@test_throws IncompleteData decodestring(b"\0\0")
 
 # decode list
 
@@ -53,5 +77,7 @@ using ErlPort.ErlTerms.Decode
 @test_throws IncompleteData decode(b"\x83P\0\0\0")
 @test_throws IncompleteData decode(b"\x83P\0\0\0\0")
 # XXX add the value error throw
-data = b"\x83P\0\0\0\x17\x78\xda\xcb\x66\x10\x49\xc1\2\0\x5d\x60\x08\x50"
-@test decode(data) == "xxx"
+@test decode(compdata1) == (Uint8[0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,
+	                              0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,
+	                              0x64,0x64,0x64,0x64],
+	                        Uint8[])
