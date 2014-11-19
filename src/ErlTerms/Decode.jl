@@ -101,10 +101,22 @@ function decodeterm(bytes::Array{Uint8,1})
     elseif tag == newfloattag
         return bytes
     elseif tag in [smallbiginttag, largebiginttag]
+        # XXX move logic out to function
         if tag == smallbiginttag
-            return bytes
+            (length, sign) = (0, 0)
+            tail = bytes[4:end]
+        else
+            (length, sign) = (0, 0)
+            tail = bytes[7:end]
         end
-        return bytes
+        n = 0
+        if length
+            n = 0
+            if sign
+                n = -n
+            end
+        end
+        return n, tail[length+1:end]
     else
         throw(UnsupportedData(bytes))
     end
