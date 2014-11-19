@@ -80,14 +80,17 @@ end
 # decode big integer
 
 # decode compressed term
-#@test_throws InvalidCompressedTag decode(b"\x83z")
 @test_throws IncompleteData decode(b"\x83P")
 @test_throws IncompleteData decode(b"\x83P\0")
 @test_throws IncompleteData decode(b"\x83P\0\0")
 @test_throws IncompleteData decode(b"\x83P\0\0\0")
 @test_throws IncompleteData decode(b"\x83P\0\0\0\0")
-# XXX add the value error throw
+@test_throws InvalidCompressedTag decode(badsizecompdata)
 @test decode(compdata1) == ([100,100,100,100,100,100,100,100,100,100,
                              100,100,100,100, 100,100,100,100,100,100],
                             Uint8[])
-# XXX att more compressed tests
+# XXX the following test fails because the Zlib library for Julia doesn't
+# provide a flush-like mechanism that the Python zlib library does
+# @test decode(compdata2) == ([100,100,100,100,100,100,100,100,100,100,
+#                              100,100,100,100, 100,100,100,100,100,100],
+#                             [116,97,105,108])
