@@ -86,8 +86,7 @@ function decodeterm(bytes::Array{Uint8,1})
     if tag == atomtag
         return decodeatom(bytes)
     elseif tag == niltag
-        #return (nothing, bytes[2:end])
-        return ([], bytes[2:end])
+        return decodenil(bytes)
     elseif tag == stringtag
         return decodestring(bytes)
     elseif tag in [listtag, smalltupletag, largetupletag]
@@ -144,6 +143,8 @@ function decodeatom(bytes::Array{Uint8,1})
 end
 
 function decodenil(bytes::Array{Uint8,1})
+    #return (nothing, bytes[2:end])
+    return ([], bytes[2:end])
 end
 
 function decodestring(bytes::Array{Uint8,1})
