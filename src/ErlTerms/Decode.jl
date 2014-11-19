@@ -37,9 +37,7 @@ include("Tags.jl")
 include("Util.jl")
 
 function decode(bytes::Array{Uint8,1})
-    if length(bytes) == 0
-        throw(IncompleteData(bytes))
-    end
+    lencheck(bytes, length(bytes) == 0)
     if bytes[1] != 131
         throw(UnknownProtocolVersion(bytes[1]))
     end
@@ -99,14 +97,8 @@ function decodeterm(bytes::Array{Uint8,1})
 end
 
 function decodeatom(bytes::Array{Uint8,1})
-    len = length(bytes)
-    if len < 3
-        throw(IncompleteData(bytes))
-    end
-    unpackedlen = int2unpack(bytes[2:3]) + 3
-    if len < unpackedlen
-        throw(IncompleteData(bytes))
-    end
+    len = lencheck(bytes, 3)
+    unpackedlen = lencheck(len, int2unpack(bytes[2:3]) + 3, bytes)
     name = bytes[4:unpackedlen]
     if name == b"true"
         return (true, bytes[unpackedlen+1:end])
@@ -125,28 +117,18 @@ function decodenil(bytes::Array{Uint8,1})
 end
 
 function decodestring(bytes::Array{Uint8,1})
-    len = length(bytes)
-    if len < 3
-        throw(IncompleteData(bytes))
-    end
-    unpackedlen = int2unpack(bytes[2:3]) + 3
-    if len < unpackedlen
-        throw(IncompleteData(bytes))
-    end
+    len = lencheck(bytes, 3)
+    unpackedlen = lencheck(len, int2unpack(bytes[2:3]) + 3, bytes)
     (bytes[4:unpackedlen], bytes[unpackedlen+1:end])
 end
 
 function decodesmallint(bytes::Array{Uint8,1})
-    if length(bytes) < 2
-        throw(IncompleteData(bytes))
-    end
+    lencheck(bytes, 2)
     (bytes[2], bytes[3:end])
 end
 
 function decodeint(bytes::Array{Uint8,1})
-    if length(bytes) < 5
-        throw(IncompleteData(bytes))
-    end
+    lencheck(bytes, 5)
     (int4unpack(bytes[2:5]), bytes[6:end])
 end
 
