@@ -72,7 +72,7 @@ function decompressterm(bytes::Array{Uint8,1})
     term = decompress(bytes[7:end])
     actuallen = length(term)
     if actuallen != sentlen
-        msg = "Header declared $sent_len bytes but got $actual_len bytes."
+        msg = "Header declared $sentlen bytes but got $actuallen bytes."
         throw(InvalidCompressedTag(msg))
     end
     return term
