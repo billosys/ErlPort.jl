@@ -37,12 +37,16 @@ end
 @test decode(b"\x83d\0\0tail") == (symbol(""), b"tail")
 @test decode(b"\x83d\0\4test") == (:test, b"")
 @test decode(b"\x83d\0\4testtail") == (:test, b"tail")
-# XXX add decode atom tests for 'true, 'false, 'undefined
+@test decode(b"\x83d\0\4true") == (true, b"")
+@test decode(b"\x83d\0\5false") == (false, b"")
+@test decode(b"\x83d\0\x09undefined") == (nothing, b"")
 @test decodeatom(b"d\0\0") == (symbol(""), [])
 @test decodeatom(b"d\0\0tail") == (symbol(""), b"tail")
 @test decodeatom(b"d\0\4test") == (:test, b"")
 @test decodeatom(b"d\0\4testtail") == (:test, b"tail")
-
+@test decodeatom(b"d\0\4true") == (true, b"")
+@test decodeatom(b"d\0\5false") == (false, b"")
+@test decodeatom(b"d\0\x09undefined") == (nothing, b"")
 # decode predefined atoms
 
 # decode empty list
