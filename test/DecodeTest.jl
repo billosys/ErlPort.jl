@@ -134,6 +134,32 @@ testcase() do
 end
 
 # decode float
+testcase() do
+    @test_throws IncompleteData decode(b"\x83F")
+    @test_throws IncompleteData decode(b"\x83F\0")
+    @test_throws IncompleteData decode(b"\x83F\0\0")
+    @test_throws IncompleteData decode(b"\x83F\0\0\0")
+    @test_throws IncompleteData decode(b"\x83F\0\0\0\0")
+    @test_throws IncompleteData decode(b"\x83F\0\0\0\0\0")
+    @test_throws IncompleteData decode(b"\x83F\0\0\0\0\0\0")
+    @test_throws IncompleteData decode(b"\x83F\0\0\0\0\0\0\0")
+    @test decode(b"\x83F\0\0\0\0\0\0\0\0") == (0.0, b"")
+    @test decode(b"\x83F\0\0\0\0\0\0\0\0tail") == (0.0, b"tail")
+    @test decode(b"\x83F?\xf8\0\0\0\0\0\0") == (1.5, b"")
+    @test decode(b"\x83F?\xf8\0\0\0\0\0\0tail") == (1.5, b"tail")
+    @test decodefloat(b"F\0\0\0\0\0\0\0\0") == (0.0, b"")
+    @test decodefloat(b"F\0\0\0\0\0\0\0\0tail") == (0.0, b"tail")
+    @test decodefloat(b"F?\xf8\0\0\0\0\0\0") == (1.5, b"")
+    @test decodefloat(b"F?\xf8\0\0\0\0\0\0tail") == (1.5, b"tail")
+    @test_throws IncompleteData decodefloat(b"F")
+    @test_throws IncompleteData decodefloat(b"F\0")
+    @test_throws IncompleteData decodefloat(b"F\0\0")
+    @test_throws IncompleteData decodefloat(b"F\0\0\0")
+    @test_throws IncompleteData decodefloat(b"F\0\0\0\0")
+    @test_throws IncompleteData decodefloat(b"F\0\0\0\0\0")
+    @test_throws IncompleteData decodefloat(b"F\0\0\0\0\0\0")
+    @test_throws IncompleteData decodefloat(b"F\0\0\0\0\0\0\0")
+end
 
 # decode small big integer
 

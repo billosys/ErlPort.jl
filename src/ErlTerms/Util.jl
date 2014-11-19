@@ -6,6 +6,10 @@ function int2unpack(bytes)
     int(reinterpret(Int8, reverse(bytes))[1])
 end
 
+function floatunpack(bytes)
+    reinterpret(Float64, reverse(bytes))[1]
+end
+
 function lencheck(bytes::Array{Uint8,1}, limit::Int64)
     len = length(bytes)
     lencheck(len, len < limit, bytes)
