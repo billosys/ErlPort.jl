@@ -1,6 +1,7 @@
 # See http://erlang.org/doc/apps/erts/erl_ext_dist.html
 newfloattag = 70
 bitbintag = 77
+compressed = 80
 atomcachereftag = 82
 smallinttag = 97
 inttag = 98
