@@ -70,6 +70,16 @@ end
 # decode opaque object
 
 # decode small integer
+@test_throws IncompleteData decode(b"\x83a")
+@test decode(b"\x83a\0") == (0, b"")
+@test decode(b"\x83a\0tail") == (0, b"tail")
+@test decode(b"\x83a\xff") == (255, b"")
+@test decode(b"\x83a\xfftail") == (255, b"tail")
+@test_throws IncompleteData decodesmallint(b"a")
+@test decodesmallint(b"a\0") == (0, b"")
+@test decodesmallint(b"a\0tail") == (0, b"tail")
+@test decodesmallint(b"a\xff") == (255, b"")
+@test decodesmallint(b"a\xfftail") == (255, b"tail")
 
 # decode integer
 

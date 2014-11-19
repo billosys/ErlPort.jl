@@ -26,7 +26,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 module Decode
 
-export decode, decodeterm, decodestring, decodeatom
+export decode, decodeterm, decodestring, decodeatom, decodesmallint
 export decompressterm, int2unpack, int4unpack
 
 using Zlib
@@ -41,10 +41,7 @@ function decode(bytes::Array{Uint8,1})
     if bytes[1] != 131
         throw(UnknownProtocolVersion(bytes[1]))
     end
-    if length(bytes) < 4
-        throw(IncompleteData(bytes))
-    end
-    if bytes[2] == b"P"[1]
+    if length(bytes) >= 2 && bytes[2] == b"P"[1]
         # XXX maybe have this match the call to decode below? bytes[2:end]
         # instead of just bytes?
         return decodeterm(decompressterm(bytes))
@@ -92,7 +89,7 @@ function decodeterm(bytes::Array{Uint8,1})
     elseif tag in [listtag, smalltupletag, largetupletag]
         return bytes
     elseif tag == smallinttag
-        return bytes
+        return decodesmallint(bytes)
     elseif tag == inttag
         return bytes
     elseif tag == bintag
@@ -157,6 +154,13 @@ function decodestring(bytes::Array{Uint8,1})
         throw(IncompleteData(bytes))
     end
     (bytes[4:unpackedlen], bytes[unpackedlen+1:end])
+end
+
+function decodesmallint(bytes::Array{Uint8,1})
+    if length(bytes) < 2
+        throw(IncompleteData(bytes))
+    end
+    (bytes[2], bytes[3:end])
 end
 
 end
