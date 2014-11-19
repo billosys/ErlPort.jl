@@ -1,3 +1,5 @@
+using Zlib
+
 function int4unpack(bytes)
     int(reinterpret(Int32, reverse(bytes))[1])
 end

@@ -30,7 +30,6 @@ export decode, decodeterm, decodestring, decodeatom,
 decodesmallint, decodeint, decodebin, decodefloat,
 decompressterm, int2unpack, int4unpack
 
-using Zlib
 using ErlPort.Exceptions
 
 include("Tags.jl")
