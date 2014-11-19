@@ -26,8 +26,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 module Decode
 
-export decode, decodeterm, decodestring, decodeatom, decodesmallint
-export decompressterm, int2unpack, int4unpack
+export decode, decodeterm, decodestring, decodeatom,
+decodesmallint, decodeint,
+decompressterm, int2unpack, int4unpack
 
 using Zlib
 using ErlPort.Exceptions
@@ -91,7 +92,7 @@ function decodeterm(bytes::Array{Uint8,1})
     elseif tag == smallinttag
         return decodesmallint(bytes)
     elseif tag == inttag
-        return bytes
+        return decodeint(bytes)
     elseif tag == bintag
         return bytes
     elseif tag == newfloattag
@@ -161,6 +162,13 @@ function decodesmallint(bytes::Array{Uint8,1})
         throw(IncompleteData(bytes))
     end
     (bytes[2], bytes[3:end])
+end
+
+function decodeint(bytes::Array{Uint8,1})
+    if length(bytes) < 5
+        throw(IncompleteData(bytes))
+    end
+    (int4unpack(bytes[2:5]), bytes[6:end])
 end
 
 end
