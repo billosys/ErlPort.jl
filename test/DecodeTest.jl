@@ -112,6 +112,26 @@ testcase() do
 end
 
 # decode binary
+testcase() do
+    @test_throws IncompleteData decode(b"\x83m")
+    @test_throws IncompleteData decode(b"\x83m\0")
+    @test_throws IncompleteData decode(b"\x83m\0\0")
+    @test_throws IncompleteData decode(b"\x83m\0\0\0")
+    @test_throws IncompleteData decode(b"\x83m\0\0\0\1")
+    @test decode(b"\x83m\0\0\0\0") == (b"", b"")
+    @test decode(b"\x83m\0\0\0\0tail") == (b"", b"tail")
+    @test decode(b"\x83m\0\0\0\4data") == (b"data", b"")
+    @test decode(b"\x83m\0\0\0\4datatail") == (b"data", b"tail")
+    @test decodebin(b"m\0\0\0\0") == (b"", b"")
+    @test decodebin(b"m\0\0\0\0tail") == (b"", b"tail")
+    @test decodebin(b"m\0\0\0\4data") == (b"data", b"")
+    @test decodebin(b"m\0\0\0\4datatail") == (b"data", b"tail")
+    @test_throws IncompleteData decodebin(b"m")
+    @test_throws IncompleteData decodebin(b"m\0")
+    @test_throws IncompleteData decodebin(b"m\0\0")
+    @test_throws IncompleteData decodebin(b"m\0\0\0")
+    @test_throws IncompleteData decodebin(b"m\0\0\0\1")
+end
 
 # decode float
 

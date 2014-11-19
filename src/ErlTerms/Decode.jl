@@ -27,7 +27,7 @@
 module Decode
 
 export decode, decodeterm, decodestring, decodeatom,
-decodesmallint, decodeint,
+decodesmallint, decodeint, decodebin,
 decompressterm, int2unpack, int4unpack
 
 using Zlib
@@ -71,7 +71,7 @@ function decodeterm(bytes::Array{Uint8,1})
     elseif tag == inttag
         return decodeint(bytes)
     elseif tag == bintag
-        return bytes
+        return decodebin(bytes)
     elseif tag == newfloattag
         return bytes
     elseif tag in [smallbiginttag, largebiginttag]
@@ -130,6 +130,12 @@ end
 function decodeint(bytes::Array{Uint8,1})
     lencheck(bytes, 5)
     (int4unpack(bytes[2:5]), bytes[6:end])
+end
+
+function decodebin(bytes::Array{Uint8,1})
+    len = lencheck(bytes, 5)
+    unpackedlen = lencheck(len, int4unpack(bytes[2:5]) + 5, bytes)
+    (bytes[6:unpackedlen], bytes[unpackedlen+1:end])
 end
 
 end
