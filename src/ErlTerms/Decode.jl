@@ -86,7 +86,8 @@ function decodeterm(bytes::Array{Uint8,1})
     if tag == atomtag
         return decodeatom(bytes)
     elseif tag == niltag
-        return bytes
+        #return (nothing, bytes[2:end])
+        return ([], bytes[2:end])
     elseif tag == stringtag
         return decodestring(bytes)
     elseif tag in [listtag, smalltupletag, largetupletag]

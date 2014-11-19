@@ -30,6 +30,8 @@ end
 @test_throws UnknownProtocolVersion decode(b"\0")
 @test_throws IncompleteData decode(b"\x83")
 
+# decode nil
+
 # decode atoms
 @test_throws IncompleteData decode(b"\x83d")
 @test_throws IncompleteData decode(b"\x83d\0")
