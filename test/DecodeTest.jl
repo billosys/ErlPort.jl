@@ -25,7 +25,8 @@ testcase() do
 end
 
 # basic decode errors
-#@test_throws IncompleteData decode("")
+@test_throws UnsupportedType decode("")
+@test_throws IncompleteData decode(b"")
 @test_throws UnknownProtocolVersion decode(b"\0")
 @test_throws IncompleteData decode(b"\x83")
 
