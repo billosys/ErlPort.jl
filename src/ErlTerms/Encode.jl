@@ -26,9 +26,61 @@
 # POSSIBILITY OF SUCH DAMAGE.
 module Encode
 
-export encode
+export encode, encodeterm, charint4pack, charint2pack
 
-function encode()
+include("Util.jl")
+
+function encode(term; compressed=false)
+    encoded = encodeterm(term)
+    if compressed
+        encoded = vcat(b"P", compressterm(encoded, compressed))
+    end
+    vcat(b"\x83", encoded)
+end
+
+function encodeboolorsym(term)
+    str = string(term)
+    vcat(b"d", charint2pack(length(str)), convert(Array{Uint8}, str))
+end
+
+function encodeterm(term::Symbol)
+    encodeboolorsym(term)
+end
+
+function encodeterm(term::Nothing)
+    encodeboolorsym(:nothing)
+end
+
+function encodeterm(term::Bool)
+    encodeboolorsym(term)
+end
+
+function encodeterm(term::Array{Uint8,1})
+    len = length(term)
+    if len == 0
+        return b"j"
+    elseif len <= 65535
+        return vcat(b"k", charint2pack(len), term)
+    elseif len > 4294967295
+        throw(InvalidListLength(len))
+    return vcat(b"l", charint4pack(len), map(encodeterm, term), b"j")
+    end
+end
+
+function encodeterm(term::UTF8String)
+    encodeterm(convert(Array{Uint8}, term))
+end
+
+function encodeterm(term::Tuple)
+    len = length(term)
+    if len <= 255
+        header = vcat(b"h", convert(Uint8, len))
+    elseif arity <= maxtuplesize
+        header = charint4pack(arity)
+    else
+        throw(InvalidTupleArity(arity))
+    end
+    vcat(header, map(encodeterm, term))
 end
 
 end
