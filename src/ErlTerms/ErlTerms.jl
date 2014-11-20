@@ -33,13 +33,4 @@ import Base.length
 include("Decode.jl")
 include("Encode.jl")
 
-type Atom
-  bytes::Array{Uint8,1}
-end
-
-Atom() = Atom(b"")
-getindex(atom::Atom, index::Int64) = getindex(atom.bytes, index)
-getindex(atom::Atom, range::UnitRange{Int64}) = getindex(atom.bytes, range)
-length(atom::Atom) = Base.length(atom.bytes)
-
 end
