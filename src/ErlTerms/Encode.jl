@@ -24,22 +24,11 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-module ErlTerms
+module Encode
 
-export getindex, length
+export encode
 
-import Base.length
-
-include("Decode.jl")
-include("Encode.jl")
-
-type Atom
-  bytes::Array{Uint8,1}
+function encode()
 end
-
-Atom() = Atom(b"")
-getindex(atom::Atom, index::Int64) = getindex(atom.bytes, index)
-getindex(atom::Atom, range::UnitRange{Int64}) = getindex(atom.bytes, range)
-length(atom::Atom) = Base.length(atom.bytes)
 
 end
