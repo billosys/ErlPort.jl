@@ -28,19 +28,20 @@ module Encode
 
 export encode, encodeterm, charint4pack, charint2pack
 
+include("Tags.jl")
 include("Util.jl")
 
 function encode(term; compressed=false)
     encoded = encodeterm(term)
     if compressed
-        encoded = vcat(b"P", compressterm(encoded, compressed))
+        encoded = vcat(compressedtag, compressterm(encoded, compressed))
     end
-    vcat(b"\x83", encoded)
+    vcat(version, encoded)
 end
 
 function encodeboolorsym(term)
     str = string(term)
-    vcat(b"d", charint2pack(length(str)), convert(Array{Uint8}, str))
+    vcat(atomtag, charint2pack(length(str)), convert(Array{Uint8}, str))
 end
 
 function encodeterm(term::Symbol)
@@ -58,12 +59,12 @@ end
 function encodeterm(term::Array{Uint8,1})
     len = length(term)
     if len == 0
-        return b"j"
+        return niltag
     elseif len <= 65535
-        return vcat(b"k", charint2pack(len), term)
+        return vcat(stringtag, charint2pack(len), term)
     elseif len > 4294967295
         throw(InvalidListLength(len))
-    return vcat(b"l", charint4pack(len), map(encodeterm, term), b"j")
+    return vcat(listtag, charint4pack(len), map(encodeterm, term), niltag)
     end
 end
 
@@ -74,13 +75,19 @@ end
 function encodeterm(term::Tuple)
     len = length(term)
     if len <= 255
-        header = vcat(b"h", convert(Uint8, len))
+        header = vcat(smalltupletag, convert(Uint8, len))
     elseif arity <= maxtuplesize
         header = charint4pack(arity)
     else
         throw(InvalidTupleArity(arity))
     end
     vcat(header, map(encodeterm, term))
+end
+
+function encodeterm(term::Int)
+end
+
+function encodeterm(term::Float64)
 end
 
 end
