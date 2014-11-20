@@ -1,5 +1,6 @@
 tests = ["CLI",
-		 "Decode",
+         "Encode",
+         "Decode",
          "ErlProto",
          "ErlTerms",
          "Erlang",
