@@ -41,6 +41,10 @@ type InvalidCompressedTag <: Exception
     var
 end
 
+type InvalidCompressionLevel <: Exception
+    var
+end
+
 type UnsupportedData <: Exception
     var
 end
