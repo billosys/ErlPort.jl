@@ -53,4 +53,8 @@ type UnsupportedType <: Exception
     var
 end
 
+type InvalidTupleArity <: Exception
+	var
+end
+
 end
