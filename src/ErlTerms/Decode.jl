@@ -38,10 +38,10 @@ include("Util.jl")
 
 function decode(bytes::Array{Uint8,1})
     lencheck(bytes, length(bytes) == 0)
-    if bytes[1] != 131
+    if bytes[1] != version
         throw(UnknownProtocolVersion(bytes[1]))
     end
-    if length(bytes) >= 2 && bytes[2] == compressed
+    if length(bytes) >= 2 && bytes[2] == compressedtag
         # XXX maybe have this match the call to decode below? bytes[2:end]
         # instead of just bytes?
         return decodeterm(decompressterm(bytes))
