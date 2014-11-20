@@ -26,11 +26,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 module Decode
 
+using ErlPort.Exceptions
+
 export decode, decodeterm, decodestring, decodeatom,
 decodesmallint, decodeint, decodebin, decodefloat,
+decodesmalltuple,
 decompressterm, int2unpack, int4unpack
-
-using ErlPort.Exceptions
 
 include("Tags.jl")
 include("Util.jl")
@@ -63,6 +64,8 @@ function decodeterm(bytes::Array{Uint8,1})
         return decodenil(bytes)
     elseif tag == stringtag
         return decodestring(bytes)
+    elseif tag == smalltupletag
+        return decodesmalltuple(bytes)
     elseif tag in [listtag, smalltupletag, largetupletag]
         return bytes
     elseif tag == smallinttag
@@ -93,6 +96,10 @@ function decodeterm(bytes::Array{Uint8,1})
     else
         throw(UnsupportedData(bytes))
     end
+end
+
+function decodeterm(acc::Array, byte::Uint8)
+    vcat(acc, decodeterm([byte]))
 end
 
 function decodeatom(bytes::Array{Uint8,1})
@@ -140,6 +147,17 @@ end
 function decodefloat(bytes::Array{Uint8,1})
     lencheck(bytes, 9)
     (floatunpack(bytes[2:9]), bytes[10:end])
+end
+
+function converttoarray(len::Int64, tail::Array{Uint8,1})
+    for i in len:-1:0
+        (term, tail) = decodeterm(tail)
+    end
+end
+
+function decodesmalltuple(bytes::Array{Uint8,1})
+    lencheck(bytes, 2)
+    (len, tail) = (bytes[2], bytes[3:end])
 end
 
 end
