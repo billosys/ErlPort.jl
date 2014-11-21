@@ -63,16 +63,27 @@ end
 testcase() do
 end
 
-# tests for long int
+# tests for short int
 testcase() do
+    @test encode(0) == b"\x83a\0"
+    @test encode(1) == b"\x83a\1"
+    @test encode(255) == b"\x83a\xff"
 end
 
 # tests for int
 testcase() do
+    @test encode(-1) == b"\x83b\xff\xff\xff\xff"
+    @test encode(256) == b"\x83b\0\0\1\0"
+    @test encode(-2147483648) == b"\x83b\x80\0\0\0"
+    @test encode(2147483647) == b"\x83b\x7f\xff\xff\xff"
 end
 
-# tests for short int
+# tests for long int
 testcase() do
+    @test encode(-2147483649) == b"\x83n\4\1\1\0\0\x80"
+    @test encode(2147483648) == b"\x83n\4\0\0\0\0\x80"
+    @test encode(BigInt(2)^2040) == vcat(b"\x83o\0\0\1\0\0", zeros(255), b"\1")
+    @test encode(-BigInt(2)^2040) == vcat(b"\x83o\0\0\1\0\1", zeros(255), b"\1")
 end
 
 # tests for float

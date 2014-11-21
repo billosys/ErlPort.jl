@@ -86,6 +86,26 @@ function encodeterm(term::Tuple)
 end
 
 function encodeterm(term::Integer)
+    if 0 <= term <= typemax(Uint8)
+        return vcat(smallinttag, uint8(term))
+    elseif typemin(Int32) <= term <= typemax(Int32)
+        return vcat(inttag, charsignedint4pack(term))
+    end
+    if term >= 0
+        sign = 0
+    else
+        sign = 1
+        term = -term
+    end
+    bytes = charintpack(term)
+    len = length(bytes)
+    if len <= typemax(Uint8)
+        return vcat(smallbiginttag, len, sign, bytes)
+    elseif len <= typemax(Uint32)
+        return vcat(largebiginttag, charint4pack(len), sign, bytes)
+    end
+    msg = "Got length: $len"
+    throw(InvalidIntLength(msg))
 end
 
 function encodeterm(term::Float64)
