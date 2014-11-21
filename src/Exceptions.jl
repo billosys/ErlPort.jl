@@ -54,7 +54,11 @@ type UnsupportedType <: Exception
 end
 
 type InvalidTupleArity <: Exception
-	var
+    var
+end
+
+type InvalidIntLength <: Exception
+    var
 end
 
 end
