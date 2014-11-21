@@ -86,6 +86,9 @@ testcase() do
     @test encode(-BigInt(2)^2040) == vcat(b"\x83o\0\0\1\0\1", zeros(255), b"\1")
 end
 
+# tests for int errors
+# XXX add some!
+
 # tests for float
 testcase() do
 end
