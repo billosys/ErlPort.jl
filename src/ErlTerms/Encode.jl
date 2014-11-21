@@ -26,7 +26,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 module Encode
 
-export encode, encodeterm, charint4pack, charint2pack
+export encode, encodeterm,
+charintpack, charint4pack, charint2pack, charsignedint4pack
 
 include("Tags.jl")
 include("Util.jl")
@@ -60,9 +61,9 @@ function encodeterm(term::Array{Uint8,1})
     len = length(term)
     if len == 0
         return niltag
-    elseif len <= 2^16 - 1
+    elseif len <= typemax(Uint16)
         return vcat(stringtag, charint2pack(len), term)
-    elseif len > 2^32 - 1
+    elseif len > typemax(Uint32)
         throw(InvalidListLength(len))
     return vcat(listtag, charint4pack(len), map(encodeterm, term), niltag)
     end
@@ -74,9 +75,9 @@ end
 
 function encodeterm(term::Tuple)
     len = length(term)
-    if len <= 2^8 - 1
+    if len <= typemax(Uint8)
         header = vcat(smalltupletag, convert(Uint8, len))
-    elseif arity <= 2^32 - 1
+    elseif arity <= typemax(Uint32)
         header = charint4pack(arity)
     else
         throw(InvalidTupleArity(arity))
@@ -84,7 +85,7 @@ function encodeterm(term::Tuple)
     vcat(header, map(encodeterm, term))
 end
 
-function encodeterm(term::Int)
+function encodeterm(term::Integer)
 end
 
 function encodeterm(term::Float64)
