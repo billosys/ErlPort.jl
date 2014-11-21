@@ -60,9 +60,9 @@ function encodeterm(term::Array{Uint8,1})
     len = length(term)
     if len == 0
         return niltag
-    elseif len <= 65535
+    elseif len <= 2^16 - 1
         return vcat(stringtag, charint2pack(len), term)
-    elseif len > 4294967295
+    elseif len > 2^32 - 1
         throw(InvalidListLength(len))
     return vcat(listtag, charint4pack(len), map(encodeterm, term), niltag)
     end
@@ -74,9 +74,9 @@ end
 
 function encodeterm(term::Tuple)
     len = length(term)
-    if len <= 255
+    if len <= 2^8 - 1
         header = vcat(smalltupletag, convert(Uint8, len))
-    elseif arity <= maxtuplesize
+    elseif arity <= 2^32 - 1
         header = charint4pack(arity)
     else
         throw(InvalidTupleArity(arity))
