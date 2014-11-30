@@ -1,7 +1,5 @@
 using Zlib
 
-maxtuplesize = 4294967295
-
 function int4unpack(bytes)
     int(reinterpret(Int32, reverse(bytes))[1])
 end
@@ -14,7 +12,7 @@ function floatunpack(bytes)
     reinterpret(Float64, reverse(bytes))[1]
 end
 
-function charintpack(value::Int, size::Int)
+function charintpack(value::Integer, size::Int)
     bytes = zeros(Uint8, size)
     for i=1:size
         bytes[i] = uint8(value)
@@ -23,12 +21,25 @@ function charintpack(value::Int, size::Int)
     reverse(bytes)
 end
 
-function charint4pack(integer::Int)
+function charintpack(value::Integer)
+    bytes = []
+    while value != 0
+        bytes = vcat(bytes, uint8(value & 0xff))
+        value = value >>> 8
+    end
+    uint8(bytes)
+end
+
+function charint4pack(integer::Integer)
     charintpack(integer, 4)
 end
 
-function charint2pack(integer::Int)
+function charint2pack(integer::Integer)
     charintpack(integer, 2)
+end
+
+function charsignedint4pack(integer::Integer)
+    charintpack(integer, 4)
 end
 
 function lencheck(bytes::Array{Uint8,1}, limit::Int64)

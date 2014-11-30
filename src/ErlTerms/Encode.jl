@@ -26,7 +26,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 module Encode
 
-export encode, encodeterm, charint4pack, charint2pack
+export encode, encodeterm,
+charintpack, charint4pack, charint2pack, charsignedint4pack
 
 include("Tags.jl")
 include("Util.jl")
@@ -60,9 +61,9 @@ function encodeterm(term::Array{Uint8,1})
     len = length(term)
     if len == 0
         return niltag
-    elseif len <= 65535
+    elseif len <= typemax(Uint16)
         return vcat(stringtag, charint2pack(len), term)
-    elseif len > 4294967295
+    elseif len > typemax(Uint32)
         throw(InvalidListLength(len))
     return vcat(listtag, charint4pack(len), map(encodeterm, term), niltag)
     end
@@ -74,9 +75,9 @@ end
 
 function encodeterm(term::Tuple)
     len = length(term)
-    if len <= 255
+    if len <= typemax(Uint8)
         header = vcat(smalltupletag, convert(Uint8, len))
-    elseif arity <= maxtuplesize
+    elseif arity <= typemax(Uint32)
         header = charint4pack(arity)
     else
         throw(InvalidTupleArity(arity))
@@ -84,7 +85,27 @@ function encodeterm(term::Tuple)
     vcat(header, map(encodeterm, term))
 end
 
-function encodeterm(term::Int)
+function encodeterm(term::Integer)
+    if 0 <= term <= typemax(Uint8)
+        return vcat(smallinttag, uint8(term))
+    elseif typemin(Int32) <= term <= typemax(Int32)
+        return vcat(inttag, charsignedint4pack(term))
+    end
+    if term >= 0
+        sign = 0
+    else
+        sign = 1
+        term = -term
+    end
+    bytes = charintpack(term)
+    len = length(bytes)
+    if len <= typemax(Uint8)
+        return vcat(smallbiginttag, len, sign, bytes)
+    elseif len <= typemax(Uint32)
+        return vcat(largebiginttag, charint4pack(len), sign, bytes)
+    end
+    msg = "Got length: $len"
+    throw(InvalidIntLength(msg))
 end
 
 function encodeterm(term::Float64)
