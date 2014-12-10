@@ -1,4 +1,5 @@
 # Copyright (c) 2014, Dreki Þórgísl <dreki@billo.systems>
+#               2014, Bence Golda <bence@cursorinsight.com>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +29,12 @@ module Decode
 
 using ErlPort.Exceptions
 
-export decode, decodeterm, decodestring, decodeatom,
-decodesmallint, decodeint, decodebin, decodefloat,
-decodesmalltuple,
+export decode, decodeterm, decodeatom,
+decodesmallint, decodeint, decodenewfloat,
+decodesmallbigint, decodelargebigint,
+decodebin,
+decodenil, decodestring, decodelist,
+decodesmalltuple, decodelargetuple,
 decompressterm, int2unpack, int4unpack
 
 include("Tags.jl")
@@ -66,8 +70,10 @@ function decodeterm(bytes::Array{Uint8,1})
         return decodestring(bytes)
     elseif tag == smalltupletag
         return decodesmalltuple(bytes)
-    elseif tag in [listtag, smalltupletag, largetupletag]
-        return bytes
+    elseif tag == largetupletag
+        return decodelargetuple(bytes)
+    elseif tag == listtag
+        return decodelist(bytes)
     elseif tag == smallinttag
         return decodesmallint(bytes)
     elseif tag == inttag
@@ -75,24 +81,11 @@ function decodeterm(bytes::Array{Uint8,1})
     elseif tag == bintag
         return decodebin(bytes)
     elseif tag == newfloattag
-        return decodefloat(bytes)
-    elseif tag in [smallbiginttag, largebiginttag]
-        # XXX move logic out to function
-        if tag == smallbiginttag
-            (len, sign) = (0, 0)
-            tail = bytes[4:end]
-        else
-            (len, sign) = (0, 0)
-            tail = bytes[7:end]
-        end
-        n = 0
-        if len
-            n = 0
-            if sign
-                n = -n
-            end
-        end
-        return n, tail[len+1:end]
+        return decodenewfloat(bytes)
+    elseif tag == smallbiginttag
+        return decodesmallbigint(bytes)
+    elseif tag == largebiginttag
+        return decodelargebigint(bytes)
     else
         throw(UnsupportedData(bytes))
     end
@@ -118,7 +111,7 @@ function decodeatom(bytes::Array{Uint8,1})
 end
 
 function decodenil(bytes::Array{Uint8,1})
-    #return (nothing, bytes[2:end])
+    lencheck(bytes, 1)
     return ([], bytes[2:end])
 end
 
@@ -144,20 +137,62 @@ function decodebin(bytes::Array{Uint8,1})
     (bytes[6:unpackedlen], bytes[unpackedlen+1:end])
 end
 
-function decodefloat(bytes::Array{Uint8,1})
+function decodenewfloat(bytes::Array{Uint8,1})
     lencheck(bytes, 9)
     (floatunpack(bytes[2:9]), bytes[10:end])
 end
 
+function decodelist(bytes::Array{Uint8,1})
+    lencheck(bytes, 5)
+    (results, tail) = converttoarray(int4uunpack(bytes[2:5]), bytes[6:end])
+    # XXX mojombo's BERT (https://github.com/mojombo/bert) does the same -- it
+    # skips the improper part in lists (or throws a RuntimeError)
+    (skipped, tail) = decodeterm(tail)
+    (results, tail)
+end
+
 function converttoarray(len::Int64, tail::Array{Uint8,1})
-    for i in len:-1:0
+    results = map([0:1:len-1]) do i
         (term, tail) = decodeterm(tail)
+        term
     end
+    (results, tail)
 end
 
 function decodesmalltuple(bytes::Array{Uint8,1})
     lencheck(bytes, 2)
-    (len, tail) = (bytes[2], bytes[3:end])
+    converttotuple(intunpack(bytes[2]), bytes[3:end])
+end
+
+function decodelargetuple(bytes::Array{Uint8,1})
+    lencheck(bytes, 5)
+    converttotuple(int4uunpack(bytes[2:5]), bytes[6:end])
+end
+
+function converttotuple(len::Int64, tail::Array{Uint8,1})
+    (results, tail) = converttoarray(len, tail)
+    (tuple(results...), tail)
+end
+
+function decodesmallbigint(bytes::Array{Uint8,1})
+    len = lencheck(bytes, 3)
+    bisize = int(bytes[2])
+    lencheck(len, bisize + 3, bytes)
+    result = computebigint(bisize, bytes[4:bisize+3], bytes[3])
+    (result, bytes[bisize+4:end])
+end
+
+function decodelargebigint(bytes::Array{Uint8,1})
+    len = lencheck(bytes, 6)
+    bisize = int4unpack(bytes[2:5])
+    lencheck(len, bisize + 6, bytes)
+    result = computebigint(bisize, bytes[7:bisize+6], bytes[6])
+    (result, bytes[bisize+7:end])
+end
+
+function computebigint(len::Int64, coefficients::Array{Uint8,1}, sign::Uint8)
+    result = sum((256 .^ [0:len-1]) .* convert(Array{Int}, coefficients))
+    return(sign > 0 ? -result : result)
 end
 
 end

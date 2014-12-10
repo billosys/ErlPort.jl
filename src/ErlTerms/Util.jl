@@ -1,5 +1,15 @@
 using Zlib
 
+# 1-byte unsigned integer
+function intunpack(byte)
+    int(reinterpret(Uint8, byte)[1])
+end
+
+# 4-byte unsigned integer in big endian format
+function int4uunpack(bytes)
+    int(reinterpret(Uint32, reverse(bytes))[1])
+end
+
 function int4unpack(bytes)
     int(reinterpret(Int32, reverse(bytes))[1])
 end
