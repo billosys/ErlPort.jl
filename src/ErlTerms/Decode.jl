@@ -35,13 +35,14 @@ decodesmallbigint, decodelargebigint,
 decodebin,
 decodenil, decodestring, decodelist,
 decodesmalltuple, decodelargetuple,
-decompressterm, int2unpack, int4unpack
+decompressterm,
+size1unpack, size2unpack, size4unpack # for tests only XXX: do we really need this here?
 
 include("Tags.jl")
 include("Util.jl")
 
 function decode(bytes::Array{Uint8,1})
-    lencheck(bytes, length(bytes) == 0)
+    lencheck(bytes, 1)
     if bytes[1] != version
         throw(UnknownProtocolVersion(bytes[1]))
     end
@@ -58,9 +59,7 @@ function decode(unsupported)
 end
 
 function decodeterm(bytes::Array{Uint8,1})
-    if length(bytes) == 0
-        throw(IncompleteData(bytes))
-    end
+    lencheck(bytes, 1)
     tag = bytes[1]
     if tag == atomtag
         return decodeatom(bytes)
@@ -97,7 +96,7 @@ end
 
 function decodeatom(bytes::Array{Uint8,1})
     len = lencheck(bytes, 3)
-    unpackedlen = lencheck(len, int2unpack(bytes[2:3]) + 3, bytes)
+    unpackedlen = lencheck(len, size2unpack(bytes[2:3]) + 3, bytes)
     name = bytes[4:unpackedlen]
     if name == b"true"
         return (true, bytes[unpackedlen+1:end])
@@ -117,13 +116,13 @@ end
 
 function decodestring(bytes::Array{Uint8,1})
     len = lencheck(bytes, 3)
-    unpackedlen = lencheck(len, int2unpack(bytes[2:3]) + 3, bytes)
+    unpackedlen = lencheck(len, size2unpack(bytes[2:3]) + 3, bytes)
     (bytes[4:unpackedlen], bytes[unpackedlen+1:end])
 end
 
 function decodesmallint(bytes::Array{Uint8,1})
     lencheck(bytes, 2)
-    (bytes[2], bytes[3:end])
+    (int1unpack(bytes[2]), bytes[3:end])
 end
 
 function decodeint(bytes::Array{Uint8,1})
@@ -133,7 +132,7 @@ end
 
 function decodebin(bytes::Array{Uint8,1})
     len = lencheck(bytes, 5)
-    unpackedlen = lencheck(len, int4unpack(bytes[2:5]) + 5, bytes)
+    unpackedlen = lencheck(len, size4unpack(bytes[2:5]) + 5, bytes)
     (bytes[6:unpackedlen], bytes[unpackedlen+1:end])
 end
 
@@ -144,14 +143,14 @@ end
 
 function decodelist(bytes::Array{Uint8,1})
     lencheck(bytes, 5)
-    (results, tail) = converttoarray(int4uunpack(bytes[2:5]), bytes[6:end])
+    (results, tail) = converttoarray(size4unpack(bytes[2:5]), bytes[6:end])
     # XXX mojombo's BERT (https://github.com/mojombo/bert) does the same -- it
     # skips the improper part in lists (or throws a RuntimeError)
     (skipped, tail) = decodeterm(tail)
     (results, tail)
 end
 
-function converttoarray(len::Int64, tail::Array{Uint8,1})
+function converttoarray(len::Uint64, tail::Array{Uint8,1})
     results = map([0:1:len-1]) do i
         (term, tail) = decodeterm(tail)
         term
@@ -161,22 +160,25 @@ end
 
 function decodesmalltuple(bytes::Array{Uint8,1})
     lencheck(bytes, 2)
-    converttotuple(intunpack(bytes[2]), bytes[3:end])
+    converttotuple(size1unpack(bytes[2]), bytes[3:end])
 end
 
 function decodelargetuple(bytes::Array{Uint8,1})
     lencheck(bytes, 5)
-    converttotuple(int4uunpack(bytes[2:5]), bytes[6:end])
+    converttotuple(size4unpack(bytes[2:5]), bytes[6:end])
 end
 
-function converttotuple(len::Int64, tail::Array{Uint8,1})
+function converttotuple(len::Uint64, tail::Array{Uint8,1})
+    if len < 1
+        return( (), tail )
+    end
     (results, tail) = converttoarray(len, tail)
     (tuple(results...), tail)
 end
 
 function decodesmallbigint(bytes::Array{Uint8,1})
     len = lencheck(bytes, 3)
-    bisize = int(bytes[2])
+    bisize = size1unpack(bytes[2])
     lencheck(len, bisize + 3, bytes)
     result = computebigint(bisize, bytes[4:bisize+3], bytes[3])
     (result, bytes[bisize+4:end])
@@ -184,13 +186,13 @@ end
 
 function decodelargebigint(bytes::Array{Uint8,1})
     len = lencheck(bytes, 6)
-    bisize = int4unpack(bytes[2:5])
+    bisize = size4unpack(bytes[2:5])
     lencheck(len, bisize + 6, bytes)
     result = computebigint(bisize, bytes[7:bisize+6], bytes[6])
     (result, bytes[bisize+7:end])
 end
 
-function computebigint(len::Int64, coefficients::Array{Uint8,1}, sign::Uint8)
+function computebigint(len::Uint64, coefficients::Array{Uint8,1}, sign::Uint8)
     result = sum((256 .^ [0:len-1]) .* convert(Array{Int}, coefficients))
     return(sign > 0 ? -result : result)
 end

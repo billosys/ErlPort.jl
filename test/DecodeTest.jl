@@ -6,8 +6,6 @@ include("Testing.jl")
 # XXX Do we need to test REFERENCE_EXT, PORT_EXT, PID_EXT, NEW_REFERENCE_EXT, FUN_EXT, NEW_FUN_EXT, EXPORT_EXT
 
 # data for use by tests
-lenheader1 = b"\0\0\0\x17"
-lenheader2 = b"\0\x14"
 badsizecompdata = vcat(b"\x83P\0\0\0\x16\x78\xda\xcb\x66\x10\x49\xc1\2\0\x5d",
                        b"\x60\x08\x50")
 compdata1 = b"\x83P\0\0\0\x17\x78\xda\xcb\x66\x10\x49\xc1\2\0\x5d\x60\x08\x50"
@@ -25,8 +23,13 @@ largebigintmin = vcat(b"o\0\0\1\0\0", fill(uint8(0), 255), b"\1")
 
 # tests for supporting functions
 testcase() do
-    @test int4unpack(lenheader1) == 23
-    @test int2unpack(lenheader2) == 20
+    @test size1unpack(b"\x0a")             == 0x0a
+    @test size1unpack(b"\xaa")             == 0xaa
+    @test size2unpack(b"\x0a\x0b")         == 0x0a0b
+    @test size2unpack(b"\xaa\xbb")         == 0xaabb
+    @test size4unpack(b"\x0a\x0b\x0c\x0d") == 0x0a0b0c0d
+    @test size4unpack(b"\xaa\xbb\xcc\xdd") == 0xaabbccdd
+
     expected = [107,0,20,100,100,100,100,100,100,100,100,100,100,
                 100,100,100,100,100,100,100,100,100,100]
     @test decompressterm(compdata1) == expected

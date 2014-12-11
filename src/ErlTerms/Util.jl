@@ -1,21 +1,34 @@
 using Zlib
 
-# 1-byte unsigned integer
-function intunpack(byte)
-    int(reinterpret(Uint8, byte)[1])
+# 1-byte unsigned integer -> Uint64
+function size1unpack(bytes::Array{Uint8,1})
+    size1unpack(bytes[1])
 end
 
-# 4-byte unsigned integer in big endian format
-function int4uunpack(bytes)
-    int(reinterpret(Uint32, reverse(bytes))[1])
+function size1unpack(byte::Uint8)
+    uint64(byte)
+end
+
+# 2-bytes unsigned integer in big endian format -> Uint64
+function size2unpack(bytes::Array{Uint8,1})
+    uint64(reinterpret(Uint16, reverse(bytes))[1])
+end
+
+# 4-bytes unsigned integer in big endian format -> Uint64
+function size4unpack(bytes::Array{Uint8,1})
+    uint64(reinterpret(Uint32, reverse(bytes))[1])
+end
+
+function int1unpack(bytes::Array{Uint8,1})
+    int1unpack(bytes[1])
+end
+
+function int1unpack(byte::Uint8)
+    int(byte)
 end
 
 function int4unpack(bytes)
     int(reinterpret(Int32, reverse(bytes))[1])
-end
-
-function int2unpack(bytes)
-    int(reinterpret(Int8, reverse(bytes))[1])
 end
 
 function floatunpack(bytes)
@@ -52,21 +65,16 @@ function charsignedint4pack(integer::Integer)
     charintpack(integer, 4)
 end
 
-function lencheck(bytes::Array{Uint8,1}, limit::Int64)
-    len = length(bytes)
+function lencheck(bytes::Array{Uint8,1}, limit::Int)
+    len = uint64(length(bytes))
     lencheck(len, len < limit, bytes)
 end
 
-function lencheck(bytes::Array{Uint8,1}, pred::Bool)
-    len = length(bytes)
-    lencheck(len, pred, bytes)
-end
-
-function lencheck(len::Int64, limit::Int64, bytes::Array{Uint8,1})
+function lencheck(len::Uint64, limit::Uint64, bytes::Array{Uint8,1})
     lencheck(limit, len < limit, bytes)
 end
 
-function lencheck(len::Int64, pred::Bool, bytes::Array{Uint8,1})
+function lencheck(len::Uint64, pred::Bool, bytes::Array{Uint8,1})
     if pred
         throw(IncompleteData(bytes))
     end
@@ -93,7 +101,7 @@ function decompressterm(bytes::Array{Uint8,1})
     if length(bytes) < 16
         throw(IncompleteData(bytes))
     end
-    sentlen = int4unpack(bytes[3:6])
+    sentlen = size4unpack(bytes[3:6])
     term = Zlib.decompress(bytes[7:end])
     actuallen = length(term)
     if actuallen != sentlen
