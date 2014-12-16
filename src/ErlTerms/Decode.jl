@@ -1,4 +1,5 @@
 # Copyright (c) 2014, Dreki Þórgísl <dreki@billo.systems>
+#               2014, Bence Golda <bence@cursorinsight.com>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,16 +29,20 @@ module Decode
 
 using ErlPort.Exceptions
 
-export decode, decodeterm, decodestring, decodeatom,
-decodesmallint, decodeint, decodebin, decodefloat,
-decodesmalltuple,
-decompressterm, int2unpack, int4unpack
+export decode, decodeterm, decodeatom,
+decodesmallint, decodeint, decodenewfloat,
+decodesmallbigint, decodelargebigint,
+decodebin,
+decodenil, decodestring, decodelist,
+decodesmalltuple, decodelargetuple,
+decompressterm,
+size1unpack, size2unpack, size4unpack # for tests only XXX: do we really need this here?
 
 include("Tags.jl")
 include("Util.jl")
 
 function decode(bytes::Array{Uint8,1})
-    lencheck(bytes, length(bytes) == 0)
+    lencheck(bytes, 1)
     if bytes[1] != version
         throw(UnknownProtocolVersion(bytes[1]))
     end
@@ -54,9 +59,7 @@ function decode(unsupported)
 end
 
 function decodeterm(bytes::Array{Uint8,1})
-    if length(bytes) == 0
-        throw(IncompleteData(bytes))
-    end
+    lencheck(bytes, 1)
     tag = bytes[1]
     if tag == atomtag
         return decodeatom(bytes)
@@ -66,8 +69,10 @@ function decodeterm(bytes::Array{Uint8,1})
         return decodestring(bytes)
     elseif tag == smalltupletag
         return decodesmalltuple(bytes)
-    elseif tag in [listtag, smalltupletag, largetupletag]
-        return bytes
+    elseif tag == largetupletag
+        return decodelargetuple(bytes)
+    elseif tag == listtag
+        return decodelist(bytes)
     elseif tag == smallinttag
         return decodesmallint(bytes)
     elseif tag == inttag
@@ -75,24 +80,11 @@ function decodeterm(bytes::Array{Uint8,1})
     elseif tag == bintag
         return decodebin(bytes)
     elseif tag == newfloattag
-        return decodefloat(bytes)
-    elseif tag in [smallbiginttag, largebiginttag]
-        # XXX move logic out to function
-        if tag == smallbiginttag
-            (len, sign) = (0, 0)
-            tail = bytes[4:end]
-        else
-            (len, sign) = (0, 0)
-            tail = bytes[7:end]
-        end
-        n = 0
-        if len
-            n = 0
-            if sign
-                n = -n
-            end
-        end
-        return n, tail[len+1:end]
+        return decodenewfloat(bytes)
+    elseif tag == smallbiginttag
+        return decodesmallbigint(bytes)
+    elseif tag == largebiginttag
+        return decodelargebigint(bytes)
     else
         throw(UnsupportedData(bytes))
     end
@@ -104,7 +96,7 @@ end
 
 function decodeatom(bytes::Array{Uint8,1})
     len = lencheck(bytes, 3)
-    unpackedlen = lencheck(len, int2unpack(bytes[2:3]) + 3, bytes)
+    unpackedlen = lencheck(len, size2unpack(bytes[2:3]) + 3, bytes)
     name = bytes[4:unpackedlen]
     if name == b"true"
         return (true, bytes[unpackedlen+1:end])
@@ -118,19 +110,19 @@ function decodeatom(bytes::Array{Uint8,1})
 end
 
 function decodenil(bytes::Array{Uint8,1})
-    #return (nothing, bytes[2:end])
+    lencheck(bytes, 1)
     return ([], bytes[2:end])
 end
 
 function decodestring(bytes::Array{Uint8,1})
     len = lencheck(bytes, 3)
-    unpackedlen = lencheck(len, int2unpack(bytes[2:3]) + 3, bytes)
+    unpackedlen = lencheck(len, size2unpack(bytes[2:3]) + 3, bytes)
     (bytes[4:unpackedlen], bytes[unpackedlen+1:end])
 end
 
 function decodesmallint(bytes::Array{Uint8,1})
     lencheck(bytes, 2)
-    (bytes[2], bytes[3:end])
+    (int1unpack(bytes[2]), bytes[3:end])
 end
 
 function decodeint(bytes::Array{Uint8,1})
@@ -140,24 +132,69 @@ end
 
 function decodebin(bytes::Array{Uint8,1})
     len = lencheck(bytes, 5)
-    unpackedlen = lencheck(len, int4unpack(bytes[2:5]) + 5, bytes)
+    unpackedlen = lencheck(len, size4unpack(bytes[2:5]) + 5, bytes)
     (bytes[6:unpackedlen], bytes[unpackedlen+1:end])
 end
 
-function decodefloat(bytes::Array{Uint8,1})
+function decodenewfloat(bytes::Array{Uint8,1})
     lencheck(bytes, 9)
     (floatunpack(bytes[2:9]), bytes[10:end])
 end
 
-function converttoarray(len::Int64, tail::Array{Uint8,1})
-    for i in len:-1:0
+function decodelist(bytes::Array{Uint8,1})
+    lencheck(bytes, 5)
+    (results, tail) = converttoarray(size4unpack(bytes[2:5]), bytes[6:end])
+    # XXX mojombo's BERT (https://github.com/mojombo/bert) does the same -- it
+    # skips the improper part in lists (or throws a RuntimeError)
+    (skipped, tail) = decodeterm(tail)
+    (results, tail)
+end
+
+function converttoarray(len::Uint64, tail::Array{Uint8,1})
+    results = map([0:1:len-1]) do i
         (term, tail) = decodeterm(tail)
+        term
     end
+    (results, tail)
 end
 
 function decodesmalltuple(bytes::Array{Uint8,1})
     lencheck(bytes, 2)
-    (len, tail) = (bytes[2], bytes[3:end])
+    converttotuple(size1unpack(bytes[2]), bytes[3:end])
+end
+
+function decodelargetuple(bytes::Array{Uint8,1})
+    lencheck(bytes, 5)
+    converttotuple(size4unpack(bytes[2:5]), bytes[6:end])
+end
+
+function converttotuple(len::Uint64, tail::Array{Uint8,1})
+    if len < 1
+        return( (), tail )
+    end
+    (results, tail) = converttoarray(len, tail)
+    (tuple(results...), tail)
+end
+
+function decodesmallbigint(bytes::Array{Uint8,1})
+    len = lencheck(bytes, 3)
+    bisize = size1unpack(bytes[2])
+    lencheck(len, bisize + 3, bytes)
+    result = computebigint(bisize, bytes[4:bisize+3], bytes[3])
+    (result, bytes[bisize+4:end])
+end
+
+function decodelargebigint(bytes::Array{Uint8,1})
+    len = lencheck(bytes, 6)
+    bisize = size4unpack(bytes[2:5])
+    lencheck(len, bisize + 6, bytes)
+    result = computebigint(bisize, bytes[7:bisize+6], bytes[6])
+    (result, bytes[bisize+7:end])
+end
+
+function computebigint(len::Uint64, coefficients::Array{Uint8,1}, sign::Uint8)
+    result = sum((256 .^ [0:len-1]) .* convert(Array{Int}, coefficients))
+    return(sign > 0 ? -result : result)
 end
 
 end
