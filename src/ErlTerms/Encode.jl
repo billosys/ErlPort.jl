@@ -69,7 +69,7 @@ function encodeterm(term::Array{UInt8,1})
     end
 end
 
-function encodeterm(term::UTF8String)
+function encodeterm(term::String)
     encodeterm(convert(Array{UInt8}, term))
 end
 
