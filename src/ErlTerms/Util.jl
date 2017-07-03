@@ -24,11 +24,11 @@ function int1unpack(bytes::Array{UInt8,1})
 end
 
 function int1unpack(byte::UInt8)
-    int(byte)
+    Int(byte)
 end
 
 function int4unpack(bytes)
-    int(reinterpret(Int32, reverse(bytes))[1])
+    Int(reinterpret(Int32, reverse(bytes))[1])
 end
 
 function floatunpack(bytes)
