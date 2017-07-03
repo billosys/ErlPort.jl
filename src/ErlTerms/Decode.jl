@@ -41,7 +41,7 @@ size1unpack, size2unpack, size4unpack # for tests only XXX: do we really need th
 include("Tags.jl")
 include("Util.jl")
 
-function decode(bytes::Array{Uint8,1})
+function decode(bytes::Array{UInt8,1})
     lencheck(bytes, 1)
     if bytes[1] != version
         throw(UnknownProtocolVersion(bytes[1]))
@@ -58,7 +58,7 @@ function decode(unsupported)
     throw(UnsupportedType(unsupported))
 end
 
-function decodeterm(bytes::Array{Uint8,1})
+function decodeterm(bytes::Array{UInt8,1})
     lencheck(bytes, 1)
     tag = bytes[1]
     if tag == atomtag
@@ -90,11 +90,11 @@ function decodeterm(bytes::Array{Uint8,1})
     end
 end
 
-function decodeterm(acc::Array, byte::Uint8)
+function decodeterm(acc::Array, byte::UInt8)
     vcat(acc, decodeterm([byte]))
 end
 
-function decodeatom(bytes::Array{Uint8,1})
+function decodeatom(bytes::Array{UInt8,1})
     len = lencheck(bytes, 3)
     unpackedlen = lencheck(len, size2unpack(bytes[2:3]) + 3, bytes)
     name = bytes[4:unpackedlen]
@@ -109,39 +109,39 @@ function decodeatom(bytes::Array{Uint8,1})
     end
 end
 
-function decodenil(bytes::Array{Uint8,1})
+function decodenil(bytes::Array{UInt8,1})
     lencheck(bytes, 1)
     return ([], bytes[2:end])
 end
 
-function decodestring(bytes::Array{Uint8,1})
+function decodestring(bytes::Array{UInt8,1})
     len = lencheck(bytes, 3)
     unpackedlen = lencheck(len, size2unpack(bytes[2:3]) + 3, bytes)
     (bytes[4:unpackedlen], bytes[unpackedlen+1:end])
 end
 
-function decodesmallint(bytes::Array{Uint8,1})
+function decodesmallint(bytes::Array{UInt8,1})
     lencheck(bytes, 2)
     (int1unpack(bytes[2]), bytes[3:end])
 end
 
-function decodeint(bytes::Array{Uint8,1})
+function decodeint(bytes::Array{UInt8,1})
     lencheck(bytes, 5)
     (int4unpack(bytes[2:5]), bytes[6:end])
 end
 
-function decodebin(bytes::Array{Uint8,1})
+function decodebin(bytes::Array{UInt8,1})
     len = lencheck(bytes, 5)
     unpackedlen = lencheck(len, size4unpack(bytes[2:5]) + 5, bytes)
     (bytes[6:unpackedlen], bytes[unpackedlen+1:end])
 end
 
-function decodenewfloat(bytes::Array{Uint8,1})
+function decodenewfloat(bytes::Array{UInt8,1})
     lencheck(bytes, 9)
     (floatunpack(bytes[2:9]), bytes[10:end])
 end
 
-function decodelist(bytes::Array{Uint8,1})
+function decodelist(bytes::Array{UInt8,1})
     lencheck(bytes, 5)
     (results, tail) = converttoarray(size4unpack(bytes[2:5]), bytes[6:end])
     # XXX mojombo's BERT (https://github.com/mojombo/bert) does the same -- it
@@ -150,7 +150,7 @@ function decodelist(bytes::Array{Uint8,1})
     (results, tail)
 end
 
-function converttoarray(len::Uint64, tail::Array{Uint8,1})
+function converttoarray(len::UInt64, tail::Array{UInt8,1})
     results = map([0:1:len-1]) do i
         (term, tail) = decodeterm(tail)
         term
@@ -158,17 +158,17 @@ function converttoarray(len::Uint64, tail::Array{Uint8,1})
     (results, tail)
 end
 
-function decodesmalltuple(bytes::Array{Uint8,1})
+function decodesmalltuple(bytes::Array{UInt8,1})
     lencheck(bytes, 2)
     converttotuple(size1unpack(bytes[2]), bytes[3:end])
 end
 
-function decodelargetuple(bytes::Array{Uint8,1})
+function decodelargetuple(bytes::Array{UInt8,1})
     lencheck(bytes, 5)
     converttotuple(size4unpack(bytes[2:5]), bytes[6:end])
 end
 
-function converttotuple(len::Uint64, tail::Array{Uint8,1})
+function converttotuple(len::UInt64, tail::Array{UInt8,1})
     if len < 1
         return( (), tail )
     end
@@ -176,7 +176,7 @@ function converttotuple(len::Uint64, tail::Array{Uint8,1})
     (tuple(results...), tail)
 end
 
-function decodesmallbigint(bytes::Array{Uint8,1})
+function decodesmallbigint(bytes::Array{UInt8,1})
     len = lencheck(bytes, 3)
     bisize = size1unpack(bytes[2])
     lencheck(len, bisize + 3, bytes)
@@ -184,7 +184,7 @@ function decodesmallbigint(bytes::Array{Uint8,1})
     (result, bytes[bisize+4:end])
 end
 
-function decodelargebigint(bytes::Array{Uint8,1})
+function decodelargebigint(bytes::Array{UInt8,1})
     len = lencheck(bytes, 6)
     bisize = size4unpack(bytes[2:5])
     lencheck(len, bisize + 6, bytes)
@@ -192,7 +192,7 @@ function decodelargebigint(bytes::Array{Uint8,1})
     (result, bytes[bisize+7:end])
 end
 
-function computebigint(len::Uint64, coefficients::Array{Uint8,1}, sign::Uint8)
+function computebigint(len::UInt64, coefficients::Array{UInt8,1}, sign::UInt8)
     result = sum((256 .^ [0:len-1]) .* convert(Array{Int}, coefficients))
     return(sign > 0 ? -result : result)
 end

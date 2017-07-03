@@ -18,8 +18,8 @@ largetuple1 = vcat(b"i\0\0\1\0",
                    tuplepart, tuplepart, tuplepart, tuplepart, tuplepart, tuplepart,
                    tuplepart, tuplepart, tuplepart, tuplepart)
 
-smallbigintmax = vcat(b"n\xff\0", fill(uint8(255), 255))
-largebigintmin = vcat(b"o\0\0\1\0\0", fill(uint8(0), 255), b"\1")
+smallbigintmax = vcat(b"n\xff\0", fill(UInt8(255), 255))
+largebigintmin = vcat(b"o\0\0\1\0\0", fill(UInt8(0), 255), b"\1")
 
 # tests for supporting functions
 testcase() do
@@ -75,22 +75,22 @@ end
 
 # decode predefined atoms (ATOM_CACHE_REF)
 testcase() do
-    #atomcachereftag = uint8(82)
+    #atomcachereftag = UInt8(82)
 end
 
 # decode small atoms (SMALL_ATOM_EXT)
 testcase() do
-    #smallatomtag = uint8(115)
+    #smallatomtag = UInt8(115)
 end
 
 # decode UTF-8 atoms (ATOM_UTF8_EXT)
 testcase() do
-    #atomutf8tag = uint8(118)
+    #atomutf8tag = UInt8(118)
 end
 
 # decode small, UTF-8 atoms (SMALL_ATOM_UTF8_EXT)
 testcase() do
-    #smallatomutf8tag = uint8(119)
+    #smallatomutf8tag = UInt8(119)
 end
 
 # decode string list (STRING_EXT)
@@ -301,7 +301,7 @@ testcase() do
     @test_throws InvalidCompressedTag decode(badsizecompdata)
     @test decode(compdata1) == ([100,100,100,100,100,100,100,100,100,100,
                                  100,100,100,100, 100,100,100,100,100,100],
-                                Uint8[])
+                                UInt8[])
     # XXX the following test fails because the Zlib library for Julia doesn't
     # provide a flush-like mechanism that the Python zlib library does
     # @test decode(compdata2) == ([100,100,100,100,100,100,100,100,100,100,
