@@ -42,7 +42,7 @@ end
 
 function encodeboolorsym(term)
     str = string(term)
-    vcat(atomtag, charint2pack(length(str)), convert(Array{Uint8}, str))
+    vcat(atomtag, charint2pack(length(str)), convert(Array{UInt8}, str))
 end
 
 function encodeterm(term::Symbol)
@@ -57,27 +57,27 @@ function encodeterm(term::Bool)
     encodeboolorsym(term)
 end
 
-function encodeterm(term::Array{Uint8,1})
+function encodeterm(term::Array{UInt8,1})
     len = length(term)
     if len == 0
         return niltag
-    elseif len <= typemax(Uint16)
+    elseif len <= typemax(UInt16)
         return vcat(stringtag, charint2pack(len), term)
-    elseif len > typemax(Uint32)
+    elseif len > typemax(UInt32)
         throw(InvalidListLength(len))
     return vcat(listtag, charint4pack(len), map(encodeterm, term), niltag)
     end
 end
 
 function encodeterm(term::UTF8String)
-    encodeterm(convert(Array{Uint8}, term))
+    encodeterm(convert(Array{UInt8}, term))
 end
 
 function encodeterm(term::Tuple)
     len = length(term)
-    if len <= typemax(Uint8)
-        header = vcat(smalltupletag, convert(Uint8, len))
-    elseif arity <= typemax(Uint32)
+    if len <= typemax(UInt8)
+        header = vcat(smalltupletag, convert(UInt8, len))
+    elseif arity <= typemax(UInt32)
         header = charint4pack(arity)
     else
         throw(InvalidTupleArity(arity))
@@ -86,8 +86,8 @@ function encodeterm(term::Tuple)
 end
 
 function encodeterm(term::Integer)
-    if 0 <= term <= typemax(Uint8)
-        return vcat(smallinttag, uint8(term))
+    if 0 <= term <= typemax(UInt8)
+        return vcat(smallinttag, UInt8(term))
     elseif typemin(Int32) <= term <= typemax(Int32)
         return vcat(inttag, charsignedint4pack(term))
     end
@@ -99,9 +99,9 @@ function encodeterm(term::Integer)
     end
     bytes = charintpack(term)
     len = length(bytes)
-    if len <= typemax(Uint8)
+    if len <= typemax(UInt8)
         return vcat(smallbiginttag, len, sign, bytes)
-    elseif len <= typemax(Uint32)
+    elseif len <= typemax(UInt32)
         return vcat(largebiginttag, charint4pack(len), sign, bytes)
     end
     msg = "Got length: $len"
