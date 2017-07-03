@@ -49,7 +49,7 @@ function encodeterm(term::Symbol)
     encodeboolorsym(term)
 end
 
-function encodeterm(term::Nothing)
+function encodeterm(term::Void)
     encodeboolorsym(:nothing)
 end
 
