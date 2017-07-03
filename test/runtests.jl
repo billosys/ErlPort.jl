@@ -1,6 +1,6 @@
 module ErlPortTests
 
-const FILES = String[#"CLITest.jl",
+const FILES = String["CLITest.jl",
                      #"DecodeTest.jl",
                      #"EncodeTest.jl",
                      #"ErlProtoTest.jl",
