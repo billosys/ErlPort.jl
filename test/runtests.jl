@@ -1,15 +1,26 @@
-tests = ["CLI",
-         "Encode",
-         "Decode",
-         "ErlProto",
-         "ErlTerms",
-         "Erlang",
-         "StdIO"]
+module ErlPortTests
 
-println("Running tests ...")
+const FILES = String[#"CLITest.jl",
+                     #"DecodeTest.jl",
+                     #"EncodeTest.jl",
+                     #"ErlProtoTest.jl",
+                     #"ErlTermsTest.jl",
+                     #"ErlangTest.jl",
+                     #"StdIOTest.jl"
+                    ]
 
-for t in tests
-    fn = string(t, "Test.jl")
-    println("* $fn ...")
-    include(fn)
+function run()::Void
+    run(FILES)
 end
+
+function run(files::Vector{String})::Void
+    for file in files
+        let test_module::Module = include(file)
+            test_module.run()
+        end
+    end
+end
+
+end # module
+
+ErlPortTests.run()
