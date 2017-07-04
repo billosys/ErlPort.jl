@@ -1,12 +1,8 @@
 module ErlPortTests
 
 const FILES = String["CLITest.jl",
-                     #"DecodeTest.jl",
-                     #"EncodeTest.jl",
-                     #"ErlProtoTest.jl",
-                     #"ErlTermsTest.jl",
-                     #"ErlangTest.jl",
-                     #"StdIOTest.jl"
+                     "DecodeTest.jl",
+                     "EncodeTest.jl"
                     ]
 
 function run()::Void

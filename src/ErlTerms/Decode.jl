@@ -105,7 +105,7 @@ function decodeatom(bytes::Array{UInt8,1})
     elseif name == b"undefined"
         return (nothing, bytes[unpackedlen+1:end])
     else
-        return (symbol(name), bytes[unpackedlen+1:end])
+        return (Symbol(name), bytes[unpackedlen+1:end])
     end
 end
 
@@ -151,7 +151,7 @@ function decodelist(bytes::Array{UInt8,1})
 end
 
 function converttoarray(len::UInt64, tail::Array{UInt8,1})
-    results = map([0:1:len-1]) do i
+    results = map(0:1:len-1) do i
         (term, tail) = decodeterm(tail)
         term
     end
@@ -193,7 +193,7 @@ function decodelargebigint(bytes::Array{UInt8,1})
 end
 
 function computebigint(len::UInt64, coefficients::Array{UInt8,1}, sign::UInt8)
-    result = sum((256 .^ [0:len-1]) .* convert(Array{Int}, coefficients))
+    result = convert(Int64, sum((256 .^ collect(0:len-1)) .* coefficients))
     return(sign > 0 ? -result : result)
 end
 
