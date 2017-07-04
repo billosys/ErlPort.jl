@@ -27,7 +27,7 @@
 module Exceptions
 
 export IncompleteData, UnknownProtocolVersion, InvalidCompressedTag,
-UnsupportedData, UnsupportedType
+UnsupportedData, UnsupportedType, NotImplemented
 
 type IncompleteData <: Exception
     var
@@ -59,6 +59,9 @@ end
 
 type InvalidIntLength <: Exception
     var
+end
+
+type NotImplemented <: Exception
 end
 
 end
