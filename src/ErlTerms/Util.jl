@@ -1,5 +1,3 @@
-using Zlib
-
 # 1-byte unsigned integer -> UInt64
 function size1unpack(bytes::Array{UInt8,1})
     size1unpack(bytes[1])
@@ -37,10 +35,10 @@ end
 
 function charintpack(value::Integer, size::Int)
     bytes = zeros(UInt8, size)
-    for i=1:size
-        bytes[i] = UInt8(value)
+    for i in 1:size
+        bytes[i] = UInt8(value & 0xff)
         value = value >>> 8
-        end
+    end
     reverse(bytes)
 end
 
@@ -50,7 +48,7 @@ function charintpack(value::Integer)
         bytes = vcat(bytes, UInt8(value & 0xff))
         value = value >>> 8
     end
-    UInt8(bytes)
+    bytes
 end
 
 function charint4pack(integer::Integer)
@@ -86,27 +84,9 @@ function compressterm(encodedterm, compression::Bool)
 end
 
 function compressterm(encodedterm, compression::Int)
-    if compression < 0 || compression > 9
-        throw(InvalidCompressionLevel(compression))
-    end
-    comp = Zlib.compress(encodedterm, compression)
-    len = length(encodedterm)
-    # XXX add check here for too small of length
-    if length(comp) + 5 <= len
-        vcat(int4pack(len), comp)
-    end
+    throw(NotImplemented())
 end
 
 function decompressterm(bytes::Array{UInt8,1})
-    if length(bytes) < 16
-        throw(IncompleteData(bytes))
-    end
-    sentlen = size4unpack(bytes[3:6])
-    term = Zlib.decompress(bytes[7:end])
-    actuallen = length(term)
-    if actuallen != sentlen
-        msg = "Header declared $sentlen bytes but got $actuallen bytes."
-        throw(InvalidCompressedTag(msg))
-    end
-    return term
+    throw(NotImplemented())
 end
