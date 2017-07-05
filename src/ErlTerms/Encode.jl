@@ -50,7 +50,7 @@ function encodeterm(term::Symbol)
 end
 
 function encodeterm(term::Void)
-    encodeboolorsym(:nothing)
+    encodeboolorsym(:undefined)
 end
 
 function encodeterm(term::Bool)

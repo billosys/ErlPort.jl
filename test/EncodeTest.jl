@@ -43,9 +43,9 @@ function run()::Void
 
     # tests for nothing
     @testset begin
-        @test encode(nothing) == b"\x83d\0\7nothing"
+        @test encode(nothing) == b"\x83d\0\x09undefined"
         @test encode(:nothing) == b"\x83d\0\7nothing"
-        @test encodeterm(nothing) == b"d\0\7nothing"
+        @test encodeterm(nothing) == b"d\0\x09undefined"
         @test encodeterm(:nothing) == b"d\0\7nothing"
     end
 
