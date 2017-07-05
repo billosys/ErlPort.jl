@@ -51,6 +51,16 @@ function run()::Void
 
     # tests for list
     @testset begin
+        @test encode([]) == b"\x83l\0\0\0\0j"
+        @test encode([1]) == b"\x83l\0\0\0\1a\1j"
+        @test encode([1, 2]) == b"\x83l\0\0\0\2a\1a\2j"
+        @test encode([:a]) == b"\x83l\0\0\0\1d\0\1aj"
+        @test encode([:a, :ok]) == b"\x83l\0\0\0\2d\0\1ad\0\2okj"
+        @test encodeterm([]) == b"l\0\0\0\0j"
+        @test encodeterm([1]) == b"l\0\0\0\1a\1j"
+        @test encodeterm([1, 2]) == b"l\0\0\0\2a\1a\2j"
+        @test encodeterm([:a]) == b"l\0\0\0\1d\0\1aj"
+        @test encodeterm([:a, :ok]) == b"l\0\0\0\2d\0\1ad\0\2okj"
     end
 
     # tests for string

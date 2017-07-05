@@ -57,16 +57,14 @@ function encodeterm(term::Bool)
     encodeboolorsym(term)
 end
 
-function encodeterm(term::Array{UInt8,1})
-    len = length(term)
-    if len == 0
-        return niltag
-    elseif len <= typemax(UInt16)
-        return vcat(stringtag, charint2pack(len), term)
-    elseif len > typemax(UInt32)
+function encodeterm(term::Vector)
+    local len::UInt8 = length(term)
+    if len > typemax(UInt32)
         throw(InvalidListLength(len))
-    return vcat(listtag, charint4pack(len), map(encodeterm, term), niltag)
     end
+    local length_pack = charint4pack(len)
+    local listmembers::Vector{UInt8} = vcat(map(encodeterm, term)...)
+    return vcat(listtag, length_pack, listmembers, niltag)
 end
 
 function encodeterm(term::String)
