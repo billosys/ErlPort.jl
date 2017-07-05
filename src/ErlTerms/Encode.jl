@@ -111,4 +111,12 @@ end
 function encodeterm(term::Float64)
 end
 
+function encodeterm(term::Dict)
+    result = vcat(maptag, charint4pack(length(term)))
+    for (key, value) in term
+        result = vcat(result, encodeterm(key), encodeterm(value))
+    end
+    result
+end
+
 end
