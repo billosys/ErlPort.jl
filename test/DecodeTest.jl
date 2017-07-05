@@ -293,6 +293,18 @@ function run()::Void
     end
 
     # decode map (MAP_EXT)
+    @testset "decode map" begin
+        @test_throws IncompleteData decode(b"\x83t")
+        @test_throws IncompleteData decode(b"\x83t\0")
+        @test decode(b"\x83t\0\0\0\0") == (Dict(), b"")
+        @test decode(b"\x83t\0\0\0\1d\0\1aa\2") == (Dict(:a => 2), b"")
+        @test decode(b"\x83t\0\0\0\1d\0\1at\0\0\0\1d\0\1aa\2") == (Dict(:a => Dict(:a => 2)), b"")
+        @test decode(b"\x83t\0\0\0\2d\0\1aa\2k\0\1bj") == (Dict(:a => 2, b"b" => []), b"")
+
+        @test decodemap(b"t\0\0\0\0tail") == (Dict(), b"tail")
+        @test decodemap(b"t\0\0\0\1d\0\1aa\2tail") == (Dict(:a => 2), b"tail")
+        @test decodemap(b"t\0\0\0\2d\0\1aa\2k\0\1bjtail") == (Dict(:a => 2, b"b" => []), b"tail")
+    end
 
     # decode compressed term
     @testset "decode compressed term" begin

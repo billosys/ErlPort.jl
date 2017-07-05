@@ -32,6 +32,7 @@ using ErlPort.Exceptions
 export decode, decodeterm, decodeatom,
 decodesmallint, decodeint, decodenewfloat,
 decodesmallbigint, decodelargebigint,
+decodemap,
 decodebin,
 decodenil, decodestring, decodelist,
 decodesmalltuple, decodelargetuple,
@@ -85,6 +86,8 @@ function decodeterm(bytes::Array{UInt8,1})
         return decodesmallbigint(bytes)
     elseif tag == largebiginttag
         return decodelargebigint(bytes)
+    elseif tag == maptag
+        return decodemap(bytes)
     else
         throw(UnsupportedData(bytes))
     end
@@ -195,6 +198,23 @@ end
 function computebigint(len::UInt64, coefficients::Array{UInt8,1}, sign::UInt8)
     result = convert(Int64, sum((256 .^ collect(0:len-1)) .* coefficients))
     return(sign > 0 ? -result : result)
+end
+
+function decodemap(bytes::Array{UInt8,1})
+    len = lencheck(bytes, 5)
+    bisize = size4unpack(bytes[2:5])
+    result = Dict()
+
+    bytes = bytes[6:end]
+    i = 1
+    while i <= bisize
+        (key, bytes) = decodeterm(bytes)
+        (value, bytes) = decodeterm(bytes)
+        result[key] = value
+        i += 1
+    end
+
+    (result, bytes)
 end
 
 end
