@@ -70,7 +70,9 @@ function encodeterm(term::Array{UInt8,1})
 end
 
 function encodeterm(term::String)
-    encodeterm(convert(Array{UInt8}, term))
+    local length_pack::Vector{UInt8} = charint2pack(length(term))
+    local binary::Vector{UInt8} = convert(Vector{UInt8}, term)
+    return vcat(stringtag, length_pack, binary)
 end
 
 function encodeterm(term::Tuple)

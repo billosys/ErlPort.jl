@@ -55,6 +55,12 @@ function run()::Void
 
     # tests for string
     @testset begin
+        @test encode("") == b"\x83k\0\0"
+        @test encode("something") == b"\x83k\0\x09something"
+        @test encode("nothing") == b"\x83k\0\7nothing"
+        @test encodeterm("") == b"k\0\0"
+        @test encodeterm("something") == b"k\0\x09something"
+        @test encodeterm("nothing") == b"k\0\7nothing"
     end
 
     # tests for tuples
