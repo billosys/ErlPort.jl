@@ -119,6 +119,18 @@ function run()::Void
     @testset begin
     end
 
+    # tests for map
+    @testset "decode map" begin
+        @test encode(Dict()) == b"\x83t\0\0\0\0"
+        @test encode(Dict(:a => 2)) == b"\x83t\0\0\0\1d\0\1aa\2"
+        @test encode(Dict(:a => Dict(:a => 2))) == b"\x83t\0\0\0\1d\0\1at\0\0\0\1d\0\1aa\2"
+        @test encode(Dict("b" => [], :a => 2)) == b"\x83t\0\0\0\2k\0\1bl\0\0\0\0jd\0\1aa\2"
+        @test encodeterm(Dict()) == b"t\0\0\0\0"
+        @test encodeterm(Dict(:a => 2)) == b"t\0\0\0\1d\0\1aa\2"
+        @test encodeterm(Dict(:a => Dict(:a => 2))) == b"t\0\0\0\1d\0\1at\0\0\0\1d\0\1aa\2"
+        @test encodeterm(Dict("b" => [], :a => 2)) == b"t\0\0\0\2k\0\1bl\0\0\0\0jd\0\1aa\2"
+    end
+
     return nothing
 end
 
