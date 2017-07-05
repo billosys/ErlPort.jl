@@ -9,12 +9,22 @@ end
 
 # 2-bytes unsigned integer in big endian format -> UInt64
 function size2unpack(bytes::Array{UInt8,1})
-    UInt64(reinterpret(UInt16, reverse(bytes))[1])
+    converted = UInt64(reinterpret(UInt16, reverse(bytes))[1])
+    if length(converted) > 0
+        UInt64(converted[1])
+    else
+        UInt64(0)
+    end
 end
 
 # 4-bytes unsigned integer in big endian format -> UInt64
 function size4unpack(bytes::Array{UInt8,1})
-    UInt64(reinterpret(UInt32, reverse(bytes))[1])
+    converted = reinterpret(UInt32, reverse(bytes))
+    if length(converted) > 0
+        UInt64(converted[1])
+    else
+        UInt64(0)
+    end
 end
 
 function int1unpack(bytes::Array{UInt8,1})
