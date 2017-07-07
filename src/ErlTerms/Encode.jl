@@ -82,7 +82,9 @@ function encodeterm(term::Tuple)
     else
         throw(InvalidTupleArity(arity))
     end
-    vcat(header, map(encodeterm, term))
+
+
+    vcat(header, vcat(collect(map(encodeterm, term))...))
 end
 
 function encodeterm(term::Integer)

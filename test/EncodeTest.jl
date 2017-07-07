@@ -75,6 +75,12 @@ function run()::Void
 
     # tests for tuples
     @testset begin
+        @test encode(()) == b"\x83h\0"
+        @test encode((1,)) == b"\x83h\1a\1"
+        @test encode((1, 2)) == b"\x83h\2a\1a\2"
+        @test encodeterm(()) == b"h\0"
+        @test encodeterm((1,)) == b"h\1a\1"
+        @test encodeterm((1, 2)) == b"h\2a\1a\2"
     end
 
     # tests for improper list
