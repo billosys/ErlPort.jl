@@ -111,6 +111,7 @@ function run()::Void
 
     # decode list (LIST_EXT)
     @testset "decode list" begin
+        @test decode(b"\x83j") == ([], b"")
         @test decode(b"\x83l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedj") == ([1,:a,3,nothing], b"")
         @test decodelist(b"l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedj") == ([1,:a,3,nothing], b"")
         @test decodelist(b"l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedjtail") == ([1,:a,3,nothing], b"tail")
