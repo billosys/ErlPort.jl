@@ -33,4 +33,8 @@ include("ErlProto.jl")
 include("ErlTerms/ErlTerms.jl")
 include("StdIO.jl")
 
+export decode, encode
+decode = ErlTerms.Decode.decode
+encode = ErlTerms.Encode.encode
+
 end
