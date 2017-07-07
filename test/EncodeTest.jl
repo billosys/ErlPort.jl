@@ -65,12 +65,12 @@ function run()::Void
 
     # tests for string
     @testset begin
-        @test encode("") == b"\x83k\0\0"
-        @test encode("something") == b"\x83k\0\x09something"
-        @test encode("nothing") == b"\x83k\0\7nothing"
-        @test encodeterm("") == b"k\0\0"
-        @test encodeterm("something") == b"k\0\x09something"
-        @test encodeterm("nothing") == b"k\0\7nothing"
+        @test encode("") == b"\x83m\0\0\0\0"
+        @test encode("something") == b"\x83m\0\0\0\x09something"
+        @test encode("nothing") == b"\x83m\0\0\0\7nothing"
+        @test encodeterm("") == b"m\0\0\0\0"
+        @test encodeterm("something") == b"m\0\0\0\x09something"
+        @test encodeterm("nothing") == b"m\0\0\0\7nothing"
     end
 
     # tests for tuples
@@ -124,11 +124,11 @@ function run()::Void
         @test encode(Dict()) == b"\x83t\0\0\0\0"
         @test encode(Dict(:a => 2)) == b"\x83t\0\0\0\1d\0\1aa\2"
         @test encode(Dict(:a => Dict(:a => 2))) == b"\x83t\0\0\0\1d\0\1at\0\0\0\1d\0\1aa\2"
-        @test encode(Dict("b" => [], :a => 2)) == b"\x83t\0\0\0\2k\0\1bl\0\0\0\0jd\0\1aa\2"
+        @test encode(Dict("b" => [], :a => 2)) == b"\x83t\0\0\0\2m\0\0\0\1bl\0\0\0\0jd\0\1aa\2"
         @test encodeterm(Dict()) == b"t\0\0\0\0"
         @test encodeterm(Dict(:a => 2)) == b"t\0\0\0\1d\0\1aa\2"
         @test encodeterm(Dict(:a => Dict(:a => 2))) == b"t\0\0\0\1d\0\1at\0\0\0\1d\0\1aa\2"
-        @test encodeterm(Dict("b" => [], :a => 2)) == b"t\0\0\0\2k\0\1bl\0\0\0\0jd\0\1aa\2"
+        @test encodeterm(Dict("b" => [], :a => 2)) == b"t\0\0\0\2m\0\0\0\1bl\0\0\0\0jd\0\1aa\2"
     end
 
     return nothing
