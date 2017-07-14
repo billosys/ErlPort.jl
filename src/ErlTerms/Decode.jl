@@ -166,9 +166,12 @@ function decodelist(bytes::Array{UInt8,1})
 end
 
 function converttoarray(len::UInt64, tail::Array{UInt8,1})
-    results = map(0:1:len-1) do i
-        (term, tail) = decodeterm(tail)
-        term
+    local results = Vector{Any}()
+    if len > 0
+        results = map(0:1:len-1) do i
+            (term, tail) = decodeterm(tail)
+            term
+        end
     end
     (results, tail)
 end
