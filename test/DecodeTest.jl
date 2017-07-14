@@ -128,8 +128,11 @@ function run()::Void
         @testset "decode list" begin
         @test decode(b"\x83j") == []
         @test decode(b"\x83l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedj") == [1,:a,3,nothing]
+        @test decode(b"\x83\x6c\0\0\0\0\x6a") == []
+
         @test decode_with_tail(b"\x83j") == ([], b"")
         @test decode_with_tail(b"\x83l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedj") == ([1,:a,3,nothing], b"")
+
         @test decodelist(b"l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedj") == ([1,:a,3,nothing], b"")
         @test decodelist(b"l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedjtail") == ([1,:a,3,nothing], b"tail")
     end
