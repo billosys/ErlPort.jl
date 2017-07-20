@@ -135,7 +135,7 @@ function decodestring(bytes::Array{UInt8,1})
     (bytes[4:unpackedlen], bytes[unpackedlen+1:end])
 end
 
-function decodesmallint(bytes::Array{UInt8,1})
+function decodesmallint(bytes::Array{UInt8,1})::Tuple{UInt8, Array{UInt8,1}}
     lencheck(bytes, 2)
     (int1unpack(bytes[2]), bytes[3:end])
 end
