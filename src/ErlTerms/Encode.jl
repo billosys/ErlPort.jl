@@ -57,6 +57,11 @@ function encodeterm(term::Bool)
     encodeboolorsym(term)
 end
 
+function encodeterm(term::Vector{UInt8})
+    local length_pack::Vector{UInt8} = charint4pack(length(term))
+    return vcat(bintag, length_pack, term)
+end
+
 function encodeterm(term::Vector)
     local len::UInt8 = length(term)
     if len > typemax(UInt32)
