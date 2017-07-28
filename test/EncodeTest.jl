@@ -63,6 +63,17 @@ function run()::Void
         @test encodeterm([:a, :ok]) == b"l\0\0\0\2d\0\1ad\0\2okj"
     end
 
+    # tests for binary data (vector of UInt8's)
+    @testset begin
+        @test encode(b"") == b"\x83m\0\0\0\0"
+        @test encode(b"something") == b"\x83m\0\0\0\x09something"
+        @test encode(b"nothing") == b"\x83m\0\0\0\7nothing"
+        @test encodeterm(b"") == b"m\0\0\0\0"
+        @test encodeterm(b"something") == b"m\0\0\0\x09something"
+        @test encodeterm(b"nothing") == b"m\0\0\0\7nothing"
+    end
+
+
     # tests for string
     @testset begin
         @test encode("") == b"\x83m\0\0\0\0"
