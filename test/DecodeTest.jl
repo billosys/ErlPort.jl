@@ -316,6 +316,7 @@ function run()::Void
         @test_throws IncompleteData decode(b"\x83F\0\0\0\0\0\0\0\0tail")
         @test decode(b"\x83F?\xf8\0\0\0\0\0\0") == 1.5
         @test_throws IncompleteData decode(b"\x83F?\xf8\0\0\0\0\0\0tail")
+        @test isnan(decode(b"\x83d\0\3nan"))
 
         @test decode_with_tail(b"\x83F\0\0\0\0\0\0\0\0") == (0.0, b"")
         @test decode_with_tail(b"\x83F\0\0\0\0\0\0\0\0tail") == (0.0, b"tail")

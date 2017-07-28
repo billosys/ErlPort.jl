@@ -119,6 +119,8 @@ function decodeatom(bytes::Array{UInt8,1})
         return (false, bytes[unpackedlen+1:end])
     elseif name == b"undefined"
         return (nothing, bytes[unpackedlen+1:end])
+    elseif name == b"nan"
+        return (NaN, bytes[unpackedlen+1:end])
     else
         return (Symbol(name), bytes[unpackedlen+1:end])
     end
