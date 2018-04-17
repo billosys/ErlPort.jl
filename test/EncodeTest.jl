@@ -141,15 +141,31 @@ function run()::Void
     end
 
     # tests for map
-    @testset "decode map" begin
-        @test encode(Dict()) == b"\x83t\0\0\0\0"
-        @test encode(Dict(:a => 2)) == b"\x83t\0\0\0\1d\0\1aa\2"
-        @test encode(Dict(:a => Dict(:a => 2))) == b"\x83t\0\0\0\1d\0\1at\0\0\0\1d\0\1aa\2"
-        @test encode(Dict("b" => [], :a => 2)) == b"\x83t\0\0\0\2m\0\0\0\1bl\0\0\0\0jd\0\1aa\2"
-        @test encodeterm(Dict()) == b"t\0\0\0\0"
-        @test encodeterm(Dict(:a => 2)) == b"t\0\0\0\1d\0\1aa\2"
-        @test encodeterm(Dict(:a => Dict(:a => 2))) == b"t\0\0\0\1d\0\1at\0\0\0\1d\0\1aa\2"
-        @test encodeterm(Dict("b" => [], :a => 2)) == b"t\0\0\0\2m\0\0\0\1bl\0\0\0\0jd\0\1aa\2"
+    @testset "encode map" begin
+        # \x61 = 100 = SMALL_INT_EXT
+        # \x64 = 100 = ATOM_EXT
+        # \x6a = 106 = NIL_EXT
+        # \x6c = 108 = LIST_EXT
+        # \x6d = 109 = BINARY_EXT
+        # \x74 = 116 = MAP_EXT
+        @test encode(Dict()) == b"\x83\x74\0\0\0\0"
+        @test encode(Dict(:a => 2)) == b"\x83\x74\0\0\0\1\x64\0\1a\x61\2"
+        @test encode(Dict(:a => Dict(:a => 2))) ==
+              b"\x83\x74\0\0\0\1\x64\0\1a\x74\0\0\0\1\x64\0\1a\x61\2"
+
+        # In the BERT version, either element of the map can come first.
+        @test encode(Dict(b"b" => [], :a => 2)) in
+              (b"\x83\x74\0\0\0\2\x6d\0\0\0\1b\x6c\0\0\0\0\x6a\x64\0\1a\x61\2",
+               b"\x83\x74\0\0\0\2\x64\0\1a\x61\2\x6d\0\0\0\1b\x6c\0\0\0\0\x6a")
+
+        @test encodeterm(Dict()) == b"\x74\0\0\0\0"
+        @test encodeterm(Dict(:a => 2)) == b"\x74\0\0\0\1d\0\1a\x61\2"
+        @test encodeterm(Dict(:a => Dict(:a => 2))) ==
+              b"\x74\0\0\0\1\x64\0\1a\x74\0\0\0\1\x64\0\1a\x61\2"
+
+        @test encodeterm(Dict(b"b" => [], :a => 2)) in
+              (b"\x74\0\0\0\2\x6d\0\0\0\1b\x6c\0\0\0\0\x6a\x64\0\1a\x61\2",
+               b"\x74\0\0\0\2\x64\0\1a\x61\2\x6d\0\0\0\1b\x6c\0\0\0\0\x6a")
     end
 
     return nothing
