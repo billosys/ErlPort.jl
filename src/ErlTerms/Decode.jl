@@ -55,7 +55,7 @@ function decode_with_tail(bytes::Array{UInt8, 1})
     decode(view(bytes, 1:length(bytes)))
 end
 
-function decode(bytes::SubArray)
+function decode(bytes::SubArray{UInt8})
     lencheck(bytes, 1)
     if bytes[1] != version
         throw(UnknownProtocolVersion(bytes[1]))
@@ -75,7 +75,7 @@ function decodeterm(bytes::Array{UInt8,1})
     decodeterm(view(bytes, 1:length(bytes)))
 end
 
-function decodeterm(bytes::SubArray)
+function decodeterm(bytes::SubArray{UInt8})
     lencheck(bytes, 1)
     tag = bytes[1]
     if tag == atomtag
@@ -119,7 +119,7 @@ function decodeatom(bytes::Array{UInt8,1})
     decodeatom(view(bytes, 1:length(bytes)))
 end
 
-function decodeatom(bytes::SubArray)
+function decodeatom(bytes::SubArray{UInt8})
     len = lencheck(bytes, 3)
     unpackedlen = lencheck(len, size2unpack(view(bytes, 2:3)) + 3, bytes)
     name = bytes[4:unpackedlen]
@@ -140,7 +140,7 @@ function decodenil(bytes::Array{UInt8,1})
     decodenil(view(bytes, 1:length(bytes)))
 end
 
-function decodenil(bytes::SubArray)
+function decodenil(bytes::SubArray{UInt8})
     lencheck(bytes, 1)
     return ([], view(bytes, 2:length(bytes)))
 end
@@ -149,7 +149,7 @@ function decodestring(bytes::Array{UInt8,1})
     decodestring(view(bytes, 1:length(bytes)))
 end
 
-function decodestring(bytes::SubArray)
+function decodestring(bytes::SubArray{UInt8})
     len = lencheck(bytes, 3)
     unpackedlen = lencheck(len, size2unpack(view(bytes, 2:3)) + 3, bytes)
     (bytes[4:unpackedlen], view(bytes, unpackedlen+1:length(bytes)))
@@ -159,7 +159,7 @@ function decodesmallint(bytes::Array{UInt8,1})::Tuple{UInt8, Array{UInt8,1}}
     decodesmallint(view(bytes, 1:length(bytes)))
 end
 
-function decodesmallint(bytes::SubArray)
+function decodesmallint(bytes::SubArray{UInt8})
     lencheck(bytes, 2)
     (int1unpack(bytes[2]), view(bytes, 3:length(bytes)))
 end
@@ -168,7 +168,7 @@ function decodeint(bytes::Array{UInt8,1})
     decodeint(view(bytes, 1:length(bytes)))
 end
 
-function decodeint(bytes::SubArray)
+function decodeint(bytes::SubArray{UInt8})
     lencheck(bytes, 5)
     (int4unpack(view(bytes, 2:5)), view(bytes, 6:length(bytes)))
 end
@@ -177,7 +177,7 @@ function decodebin(bytes::Array{UInt8,1})
     decodebin(view(bytes, 1:length(bytes)))
 end
 
-function decodebin(bytes::SubArray)
+function decodebin(bytes::SubArray{UInt8})
     len = lencheck(bytes, 5)
     unpackedlen = lencheck(len, size4unpack(view(bytes, 2:5)) + 5, bytes)
     (bytes[6:unpackedlen], view(bytes, unpackedlen+1:length(bytes)))
@@ -187,7 +187,7 @@ function decodenewfloat(bytes::Array{UInt8,1})
     decodenewfloat(view(bytes, 1:length(bytes)))
 end
 
-function decodenewfloat(bytes::SubArray)
+function decodenewfloat(bytes::SubArray{UInt8})
     lencheck(bytes, 9)
     (floatunpack(view(bytes, 2:9)), view(bytes, 10:length(bytes)))
 end
@@ -196,7 +196,7 @@ function decodelist(bytes::Array{UInt8,1})
     decodelist(view(bytes, 1:length(bytes)))
 end
 
-function decodelist(bytes::SubArray)
+function decodelist(bytes::SubArray{UInt8})
     lencheck(bytes, 5)
     (results, tail) = converttoarray(size4unpack(view(bytes, 2:5)), view(bytes, 6:length(bytes)))
     # XXX mojombo's BERT (https://github.com/mojombo/bert) does the same -- it
@@ -209,7 +209,7 @@ function converttoarray(len::UInt64, tail::Array{UInt8,1})
     converttoarray(len::UInt64, view(tail, 1:length(tail)))
 end
 
-function converttoarray(len::UInt64, tail::SubArray)
+function converttoarray(len::UInt64, tail::SubArray{UInt8})
     local results = Vector{Any}()
     if len > 0
         results = map(0:1:len-1) do i
@@ -224,7 +224,7 @@ function decodesmalltuple(bytes::Array{UInt8,1})
     decodesmalltuple(view(bytes, 1:length(bytes)))
 end
 
-function decodesmalltuple(bytes::SubArray)
+function decodesmalltuple(bytes::SubArray{UInt8})
     lencheck(bytes, 2)
     converttotuple(size1unpack(bytes[2]), view(bytes, 3:length(bytes)))
 end
@@ -233,12 +233,12 @@ function decodelargetuple(bytes::Array{UInt8,1})
     decodelargetuple(view(bytes, 1:length(bytes)))
 end
 
-function decodelargetuple(bytes::SubArray)
+function decodelargetuple(bytes::SubArray{UInt8})
     lencheck(bytes, 5)
     converttotuple(size4unpack(view(bytes, 2:5)), view(bytes, 6:length(bytes)))
 end
 
-function converttotuple(len::UInt64, tail::SubArray)
+function converttotuple(len::UInt64, tail::SubArray{UInt8})
     if len < 1
         return( (), tail )
     end
@@ -250,7 +250,7 @@ function decodesmallbigint(bytes::Array{UInt8,1})
     decodesmallbigint(view(bytes, 1:length(bytes)))
 end
 
-function decodesmallbigint(bytes::SubArray)
+function decodesmallbigint(bytes::SubArray{UInt8})
     len = lencheck(bytes, 3)
     bisize = size1unpack(bytes[2])
     lencheck(len, bisize + 3, bytes)
@@ -262,7 +262,7 @@ function decodelargebigint(bytes::Array{UInt8,1})
     decodelargebigint(view(bytes, 1:length(bytes)))
 end
 
-function decodelargebigint(bytes::SubArray)
+function decodelargebigint(bytes::SubArray{UInt8})
     len = lencheck(bytes, 6)
     bisize = size4unpack(view(bytes, 2:5))
     lencheck(len, bisize + 6, bytes)
@@ -274,7 +274,7 @@ function computebigint(len::UInt64, coefficients::Array{UInt8,1}, sign::UInt8)
     computebigint(len::UInt64, view(coefficients, 1:length(coefficients)), sign)
 end
 
-function computebigint(len::UInt64, coefficients::SubArray, sign::UInt8)
+function computebigint(len::UInt64, coefficients::SubArray{UInt8}, sign::UInt8)
     result = convert(Int64, sum((256 .^ collect(0:len-1)) .* coefficients))
     return(sign > 0 ? -result : result)
 end
@@ -283,7 +283,7 @@ function decodemap(bytes::Array{UInt8,1})
     decodemap(view(bytes, 1:length(bytes)))
 end
 
-function decodemap(bytes::SubArray)
+function decodemap(bytes::SubArray{UInt8})
     len = lencheck(bytes, 5)
     bisize = size4unpack(view(bytes, 2:5))
     result = Dict()
@@ -304,7 +304,7 @@ function decodefloat(bytes::Array{UInt8,1})::Tuple{Float64, Vector{UInt8}}
     decodefloat(view(bytes, 1:length(bytes)))
 end
 
-function decodefloat(bytes::SubArray)
+function decodefloat(bytes::SubArray{UInt8})
     len = lencheck(bytes, 9)
     result = hex2num(bytes2hex(view(bytes, 2:9)))
     (result, view(bytes, 10:length(bytes)))
