@@ -17,7 +17,7 @@ function size2unpack(bytes::Array{UInt8,1})
 end
 
 function size2unpack(bytes::SubArray)
-    size = reinterpret(UInt16, reverse(bytes[max(1, length(bytes) - 2):length(bytes)]))
+    size = reinterpret(UInt16, reverse(view(bytes, max(1, length(bytes) - 2):length(bytes))))
     if length(size) > 0
         UInt64(size[1])
     else
@@ -31,7 +31,7 @@ function size4unpack(bytes::Array{UInt8,1})
 end
 
 function size4unpack(bytes::SubArray)
-    size = reinterpret(UInt32, reverse(bytes[max(1, length(bytes) - 4):length(bytes)]))
+    size = reinterpret(UInt32, reverse(view(bytes, max(1, length(bytes) - 4):length(bytes))))
     if length(size) > 0
         UInt64(size[1])
     else
@@ -56,7 +56,7 @@ function int4unpack(bytes::Array{UInt8,1})
 end
 
 function int4unpack(bytes::SubArray)
-    Int(reinterpret(Int32, reverse(bytes[max(1, length(bytes) - 4):length(bytes)]))[1])
+    Int(reinterpret(Int32, reverse(view(bytes, max(1, length(bytes) - 4):length(bytes))))[1])
 end
 
 function floatunpack(bytes::Array{UInt8,1})
@@ -64,7 +64,7 @@ function floatunpack(bytes::Array{UInt8,1})
 end
 
 function floatunpack(bytes::SubArray)
-    reinterpret(Float64, reverse(bytes[max(1, length(bytes) - 8):length(bytes)]))[1]
+    reinterpret(Float64, reverse(view(bytes, max(1, length(bytes) - 8):length(bytes))))[1]
 end
 
 function charintpack(value::Integer, size::Int)
