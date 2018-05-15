@@ -63,7 +63,7 @@ function encodeterm(term::Vector{UInt8})
 end
 
 function encodeterm(term::Vector)
-    local len::UInt8 = length(term)
+    local len::UInt32 = length(term)
     if len > typemax(UInt32)
         throw(InvalidListLength(len))
     end
