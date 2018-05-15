@@ -9,9 +9,9 @@ end
 
 # 2-bytes unsigned integer in big endian format -> UInt64
 function size2unpack(bytes::Array{UInt8,1})
-    converted = UInt64(reinterpret(UInt16, reverse(bytes))[1])
-    if length(converted) > 0
-        UInt64(converted[1])
+    size = reinterpret(UInt16, reverse(bytes[max(1, length(bytes) - 2):length(bytes)]))
+    if length(size) > 0
+        UInt64(size[1])
     else
         UInt64(0)
     end
@@ -19,9 +19,9 @@ end
 
 # 4-bytes unsigned integer in big endian format -> UInt64
 function size4unpack(bytes::Array{UInt8,1})
-    converted = reinterpret(UInt32, reverse(bytes))
-    if length(converted) > 0
-        UInt64(converted[1])
+    size = reinterpret(UInt32, reverse(bytes[max(1, length(bytes) - 4):length(bytes)]))
+    if length(size) > 0
+        UInt64(size[1])
     else
         UInt64(0)
     end
@@ -36,11 +36,11 @@ function int1unpack(byte::UInt8)
 end
 
 function int4unpack(bytes)
-    Int(reinterpret(Int32, reverse(bytes))[1])
+    Int(reinterpret(Int32, reverse(bytes[max(1, length(bytes) - 4):length(bytes)]))[1])
 end
 
 function floatunpack(bytes)
-    reinterpret(Float64, reverse(bytes))[1]
+    reinterpret(Float64, reverse(bytes[max(1, length(bytes) - 8):length(bytes)]))[1]
 end
 
 function charintpack(value::Integer, size::Int)
