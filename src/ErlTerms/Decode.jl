@@ -44,7 +44,7 @@ include("Tags.jl")
 include("Util.jl")
 
 function decode(bytes::Array{UInt8,1})
-    (result, acc) = decode_with_tail(bytes)
+    (result, acc) = decode(view(bytes, 1:length(bytes)))
     if length(acc) > 0
         throw(IncompleteData(acc))
     end
@@ -52,6 +52,10 @@ function decode(bytes::Array{UInt8,1})
 end
 
 function decode_with_tail(bytes::Array{UInt8, 1})
+    decode(view(bytes, 1:length(bytes)))
+end
+
+function decode(bytes::SubArray)
     lencheck(bytes, 1)
     if bytes[1] != version
         throw(UnknownProtocolVersion(bytes[1]))
@@ -67,6 +71,10 @@ function decode(unsupported)
 end
 
 function decodeterm(bytes::Array{UInt8,1})
+    decodeterm(view(bytes, 1:length(bytes)))
+end
+
+function decodeterm(bytes::SubArray)
     lencheck(bytes, 1)
     tag = bytes[1]
     if tag == atomtag
@@ -107,6 +115,10 @@ function decodeterm(acc::Array, byte::UInt8)
 end
 
 function decodeatom(bytes::Array{UInt8,1})
+    decodeatom(view(bytes, 1:length(bytes)))
+end
+
+function decodeatom(bytes::SubArray)
     len = lencheck(bytes, 3)
     unpackedlen = lencheck(len, size2unpack(bytes[2:3]) + 3, bytes)
     name = bytes[4:unpackedlen]
@@ -124,38 +136,66 @@ function decodeatom(bytes::Array{UInt8,1})
 end
 
 function decodenil(bytes::Array{UInt8,1})
+    decodenil(view(bytes, 1:length(bytes)))
+end
+
+function decodenil(bytes::SubArray)
     lencheck(bytes, 1)
     return ([], bytes[2:end])
 end
 
 function decodestring(bytes::Array{UInt8,1})
+    decodestring(view(bytes, 1:length(bytes)))
+end
+
+function decodestring(bytes::SubArray)
     len = lencheck(bytes, 3)
     unpackedlen = lencheck(len, size2unpack(bytes[2:3]) + 3, bytes)
     (bytes[4:unpackedlen], bytes[unpackedlen+1:end])
 end
 
 function decodesmallint(bytes::Array{UInt8,1})::Tuple{UInt8, Array{UInt8,1}}
+    decodesmallint(view(bytes, 1:length(bytes)))
+end
+
+function decodesmallint(bytes::SubArray)
     lencheck(bytes, 2)
     (int1unpack(bytes[2]), bytes[3:end])
 end
 
 function decodeint(bytes::Array{UInt8,1})
+    decodeint(view(bytes, 1:length(bytes)))
+end
+
+function decodeint(bytes::SubArray)
     lencheck(bytes, 5)
     (int4unpack(bytes[2:5]), bytes[6:end])
 end
 
 function decodebin(bytes::Array{UInt8,1})
+    decodebin(view(bytes, 1:length(bytes)))
+end
+
+function decodebin(bytes::SubArray)
     len = lencheck(bytes, 5)
     unpackedlen = lencheck(len, size4unpack(bytes[2:5]) + 5, bytes)
     (bytes[6:unpackedlen], bytes[unpackedlen+1:end])
 end
 
 function decodenewfloat(bytes::Array{UInt8,1})
+    decodenewfloat(view(bytes, 1:length(bytes)))
+end
+
+function decodenewfloat(bytes::SubArray)
     lencheck(bytes, 9)
     (floatunpack(bytes[2:9]), bytes[10:end])
 end
 
 function decodelist(bytes::Array{UInt8,1})
+    decodelist(view(bytes, 1:length(bytes)))
+end
+
+function decodelist(bytes::SubArray)
     lencheck(bytes, 5)
     (results, tail) = converttoarray(size4unpack(bytes[2:5]), bytes[6:end])
     # XXX mojombo's BERT (https://github.com/mojombo/bert) does the same -- it
@@ -165,6 +205,10 @@ function decodelist(bytes::Array{UInt8,1})
 end
 
 function converttoarray(len::UInt64, tail::Array{UInt8,1})
+    converttoarray(len::UInt64, view(tail, 1:length(tail)))
+end
+
+function converttoarray(len::UInt64, tail::SubArray)
     local results = Vector{Any}()
     if len > 0
         results = map(0:1:len-1) do i
@@ -176,11 +220,19 @@ function converttoarray(len::UInt64, tail::Array{UInt8,1})
 end
 
 function decodesmalltuple(bytes::Array{UInt8,1})
+    decodesmalltuple(view(bytes, 1:length(bytes)))
+end
+
+function decodesmalltuple(bytes::SubArray)
     lencheck(bytes, 2)
     converttotuple(size1unpack(bytes[2]), bytes[3:end])
 end
 
 function decodelargetuple(bytes::Array{UInt8,1})
+    decodelargetuple(view(bytes, 1:length(bytes)))
+end
+
+function decodelargetuple(bytes::SubArray)
     lencheck(bytes, 5)
     converttotuple(size4unpack(bytes[2:5]), bytes[6:end])
 end
@@ -194,6 +246,10 @@ function converttotuple(len::UInt64, tail::Array{UInt8,1})
 end
 
 function decodesmallbigint(bytes::Array{UInt8,1})
+    decodesmallbigint(view(bytes, 1:length(bytes)))
+end
+
+function decodesmallbigint(bytes::SubArray)
     len = lencheck(bytes, 3)
     bisize = size1unpack(bytes[2])
     lencheck(len, bisize + 3, bytes)
@@ -202,6 +258,10 @@ function decodesmallbigint(bytes::Array{UInt8,1})
 end
 
 function decodelargebigint(bytes::Array{UInt8,1})
+    decodelargebigint(view(bytes, 1:length(bytes)))
+end
+
+function decodelargebigint(bytes::SubArray)
     len = lencheck(bytes, 6)
     bisize = size4unpack(bytes[2:5])
     lencheck(len, bisize + 6, bytes)
@@ -210,11 +270,19 @@ function decodelargebigint(bytes::Array{UInt8,1})
 end
 
 function computebigint(len::UInt64, coefficients::Array{UInt8,1}, sign::UInt8)
+    computebigint(len::UInt64, view(coefficients, 1:length(coefficients)), sign)
+end
+
+function computebigint(len::UInt64, coefficients::SubArray, sign::UInt8)
     result = convert(Int64, sum((256 .^ collect(0:len-1)) .* coefficients))
     return(sign > 0 ? -result : result)
 end
 
 function decodemap(bytes::Array{UInt8,1})
+    decodemap(view(bytes, 1:length(bytes)))
+end
+
+function decodemap(bytes::SubArray)
     len = lencheck(bytes, 5)
     bisize = size4unpack(bytes[2:5])
     result = Dict()
@@ -232,6 +300,10 @@ function decodemap(bytes::Array{UInt8,1})
 end
 
 function decodefloat(bytes::Array{UInt8,1})::Tuple{Float64, Vector{UInt8}}
+    decodefloat(view(bytes, 1:length(bytes)))
+end
+
+function decodefloat(bytes::SubArray)
     len = lencheck(bytes, 9)
     result = hex2num(bytes2hex(bytes[2:9]))
     (result, bytes[10:end])

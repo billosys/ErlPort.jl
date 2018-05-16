@@ -1,5 +1,9 @@
 # 1-byte unsigned integer -> UInt64
 function size1unpack(bytes::Array{UInt8,1})
+    size1unpack(view(bytes, 1:length(bytes)))
+end
+
+function size1unpack(bytes::SubArray)
     size1unpack(bytes[1])
 end
 
@@ -9,6 +13,10 @@ end
 
 # 2-bytes unsigned integer in big endian format -> UInt64
 function size2unpack(bytes::Array{UInt8,1})
+    size2unpack(view(bytes, 1:length(bytes)))
+end
+
+function size2unpack(bytes::SubArray)
     size = reinterpret(UInt16, reverse(bytes[max(1, length(bytes) - 2):length(bytes)]))
     if length(size) > 0
         UInt64(size[1])
@@ -19,6 +27,10 @@ end
 
 # 4-bytes unsigned integer in big endian format -> UInt64
 function size4unpack(bytes::Array{UInt8,1})
+    size4unpack(view(bytes, 1:length(bytes)))
+end
+
+function size4unpack(bytes::SubArray)
     size = reinterpret(UInt32, reverse(bytes[max(1, length(bytes) - 4):length(bytes)]))
     if length(size) > 0
         UInt64(size[1])
@@ -28,6 +40,10 @@ function size4unpack(bytes::Array{UInt8,1})
 end
 
 function int1unpack(bytes::Array{UInt8,1})
+    int1unpack(view(bytes, 1:length(bytes)))
+end
+
+function int1unpack(bytes::SubArray)
     int1unpack(bytes[1])
 end
 
@@ -35,11 +51,19 @@ function int1unpack(byte::UInt8)
     Int(byte)
 end
 
-function int4unpack(bytes)
+function int4unpack(bytes::Array{UInt8,1})
+    int4unpack(view(bytes, 1:length(bytes)))
+end
+
+function int4unpack(bytes::SubArray)
     Int(reinterpret(Int32, reverse(bytes[max(1, length(bytes) - 4):length(bytes)]))[1])
 end
 
-function floatunpack(bytes)
+function floatunpack(bytes::Array{UInt8,1})
+    floatunpack(view(bytes, 1:length(bytes)))
+end
+
+function floatunpack(bytes::SubArray)
     reinterpret(Float64, reverse(bytes[max(1, length(bytes) - 8):length(bytes)]))[1]
 end
 
@@ -74,15 +98,27 @@ function charsignedint4pack(integer::Integer)
 end
 
 function lencheck(bytes::Array{UInt8,1}, limit::Int)
+    lencheck(view(bytes, 1:length(bytes)), limit)
+end
+
+function lencheck(bytes::SubArray, limit::Int)
     len = UInt64(length(bytes))
     lencheck(len, len < limit, bytes)
 end
 
 function lencheck(len::UInt64, limit::UInt64, bytes::Array{UInt8,1})
+    lencheck(len, limit, view(bytes, 1:length(bytes)))
+end
+
+function lencheck(len::UInt64, limit::UInt64, bytes::SubArray)
     lencheck(limit, len < limit, bytes)
 end
 
 function lencheck(len::UInt64, pred::Bool, bytes::Array{UInt8,1})
+    lencheck(len, pred, view(bytes, 1:length(bytes)))
+end
+
+function lencheck(len::UInt64, pred::Bool, bytes::SubArray)
     if pred
         throw(IncompleteData(bytes))
     end
