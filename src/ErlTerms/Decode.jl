@@ -56,11 +56,8 @@ function decode_with_tail(bytes::Array{UInt8, 1})
     if bytes[1] != version
         throw(UnknownProtocolVersion(bytes[1]))
     end
-    local databytes = bytes[2:end]
     if length(bytes) >= 2 && bytes[2] == compressedtag
-        # XXX maybe have this match the call to decode below? bytes[2:end]
-        # instead of just bytes?
-        databytes = decompressterm(bytes)
+        throw(NotImplemented())
     end
     return decodeterm(databytes)
 end
