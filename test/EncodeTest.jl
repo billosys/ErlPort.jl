@@ -115,6 +115,8 @@ function run()::Void
 
     # tests for float
     @testset begin
+        @test encode(0.0) == b"\x83\x46\0\0\0\0\0\0\0\0"
+        @test encode(1.5) == b"\x83\x46\x3f\xf8\0\0\0\0\0\0"
     end
 
     # tests for opaque objects

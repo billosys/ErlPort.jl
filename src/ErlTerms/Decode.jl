@@ -32,7 +32,7 @@ using ErlPort.Exceptions
 export decode, decodeterm, decodeatom,
 decodesmallint, decodeint, decodenewfloat,
 decodesmallbigint, decodelargebigint,
-decodemap,
+decodemap, decodefloat,
 decodebin,
 decodenil, decodestring, decodelist,
 decodesmalltuple, decodelargetuple,
@@ -88,6 +88,8 @@ function decodeterm(bytes::Array{UInt8,1})
         return decodelargebigint(bytes)
     elseif tag == maptag
         return decodemap(bytes)
+    elseif tag == floattag
+        return decodefloat(bytes)
     else
         throw(UnsupportedData(bytes))
     end
@@ -215,6 +217,12 @@ function decodemap(bytes::Array{UInt8,1})
     end
 
     (result, bytes)
+end
+
+function decodefloat(bytes::Array{UInt8,1})::Tuple{Float64, Vector{UInt8}}
+    len = lencheck(bytes, 9)
+    result = hex2num(bytes2hex(bytes[2:9]))
+    (result, bytes[10:end])
 end
 
 end
