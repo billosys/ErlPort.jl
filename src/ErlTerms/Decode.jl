@@ -29,7 +29,8 @@ module Decode
 
 using ErlPort.Exceptions
 
-export decode, decodeterm, decodeatom,
+export decode, decode_with_tail,
+decodeterm, decodeatom,
 decodesmallint, decodeint, decodenewfloat,
 decodesmallbigint, decodelargebigint,
 decodemap, decodefloat,
@@ -43,16 +44,25 @@ include("Tags.jl")
 include("Util.jl")
 
 function decode(bytes::Array{UInt8,1})
+    (result, acc) = decode_with_tail(bytes)
+    if length(acc) > 0
+        throw(IncompleteData(acc))
+    end
+    return result
+end
+
+function decode_with_tail(bytes::Array{UInt8, 1})
     lencheck(bytes, 1)
     if bytes[1] != version
         throw(UnknownProtocolVersion(bytes[1]))
     end
+    local databytes = bytes[2:end]
     if length(bytes) >= 2 && bytes[2] == compressedtag
         # XXX maybe have this match the call to decode below? bytes[2:end]
         # instead of just bytes?
-        return decodeterm(decompressterm(bytes))
+        databytes = decompressterm(bytes)
     end
-    return decodeterm(bytes[2:end])
+    return decodeterm(databytes)
 end
 
 function decode(unsupported)

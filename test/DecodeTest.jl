@@ -50,7 +50,8 @@ function run()::Void
     @testset "decode empty list" begin
         @test_throws IncompleteData decodenil(b"")
         #@test_throws IncompleteData decodenil(b"\0") # XXX decode functions don't check term tag
-        @test decode(b"\x83j") == ([], b"")
+        @test decode_with_tail(b"\x83j") == ([], b"")
+        @test decode(b"\x83j") == []
         @test decodenil(b"j") == ([], b"")
         @test decodenil(b"jtail") == ([], b"tail")
     end
@@ -60,13 +61,22 @@ function run()::Void
         @test_throws IncompleteData decode(b"\x83d")
         @test_throws IncompleteData decode(b"\x83d\0")
         @test_throws IncompleteData decode(b"\x83d\0\1")
-        @test decode(b"\x83d\0\0") == (Symbol(""), [])
-        @test decode(b"\x83d\0\0tail") == (Symbol(""), b"tail")
-        @test decode(b"\x83d\0\4test") == (:test, b"")
-        @test decode(b"\x83d\0\4testtail") == (:test, b"tail")
-        @test decode(b"\x83d\0\4true") == (true, b"")
-        @test decode(b"\x83d\0\5false") == (false, b"")
-        @test decode(b"\x83d\0\x09undefined") == (nothing, b"")
+        @test decode(b"\x83d\0\0") == Symbol("")
+        @test_throws IncompleteData decode(b"\x83d\0\0tail")
+        @test decode(b"\x83d\0\4test") == :test
+        @test_throws IncompleteData decode(b"\x83d\0\4testtail")
+        @test decode(b"\x83d\0\4true") == true
+        @test decode(b"\x83d\0\5false") == false
+        @test decode(b"\x83d\0\x09undefined") == nothing
+
+        @test decode_with_tail(b"\x83d\0\0") == (Symbol(""), [])
+        @test decode_with_tail(b"\x83d\0\0tail") == (Symbol(""), b"tail")
+        @test decode_with_tail(b"\x83d\0\4test") == (:test, b"")
+        @test decode_with_tail(b"\x83d\0\4testtail") == (:test, b"tail")
+        @test decode_with_tail(b"\x83d\0\4true") == (true, b"")
+        @test decode_with_tail(b"\x83d\0\5false") == (false, b"")
+        @test decode_with_tail(b"\x83d\0\x09undefined") == (nothing, b"")
+
         @test decodeatom(b"d\0\0") == (Symbol(""), [])
         @test decodeatom(b"d\0\0tail") == (Symbol(""), b"tail")
         @test decodeatom(b"d\0\4test") == (:test, b"")
@@ -101,8 +111,13 @@ function run()::Void
         @test_throws IncompleteData decodestring(b"")
         @test_throws IncompleteData decodestring(b"\0")
         @test_throws IncompleteData decodestring(b"\0\0")
-        @test decode(b"\x83k\0\1\1") == (b"\1", b"")
-        @test decode(b"\x83k\0\6string") == (b"string", b"")
+
+        @test decode(b"\x83k\0\1\1") == b"\1"
+        @test decode(b"\x83k\0\6string") == b"string"
+
+        @test decode_with_tail(b"\x83k\0\1\1") == (b"\1", b"")
+        @test decode_with_tail(b"\x83k\0\6string") == (b"string", b"")
+
         @test decodestring(b"k\0\0") == (b"", b"")
         @test decodestring(b"k\0\0tail") == (b"", b"tail")
         @test decodestring(b"k\0\6string") == (b"string", b"")
@@ -111,8 +126,10 @@ function run()::Void
 
     # decode list (LIST_EXT)
         @testset "decode list" begin
-        @test decode(b"\x83j") == ([], b"")
-        @test decode(b"\x83l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedj") == ([1,:a,3,nothing], b"")
+        @test decode(b"\x83j") == []
+        @test decode(b"\x83l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedj") == [1,:a,3,nothing]
+        @test decode_with_tail(b"\x83j") == ([], b"")
+        @test decode_with_tail(b"\x83l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedj") == ([1,:a,3,nothing], b"")
         @test decodelist(b"l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedj") == ([1,:a,3,nothing], b"")
         @test decodelist(b"l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedjtail") == ([1,:a,3,nothing], b"tail")
     end
@@ -125,10 +142,14 @@ function run()::Void
         @test_throws IncompleteData decodesmalltuple(b"")
         @test_throws IncompleteData decodesmalltuple(b"\0")
         @test_throws IncompleteData decodesmalltuple(b"h\1")
-        @test decode(b"\x83h\2a\1a\2") == ((1,2), b"")
-        @test decode(b"\x83h\3a\x0aa\x14a\x1e") == ((10,20,30), b"")
-        @test decode(b"\x83h\4d\0\1ad\0\1bd\0\1cd\0\1d") == ((:a,:b,:c,:d), b"")
-        @test decode(b"\x83h\2a\1a\2tail") == ((1,2), b"tail")
+        @test decode(b"\x83h\2a\1a\2") == (1,2)
+        @test decode(b"\x83h\3a\x0aa\x14a\x1e") == (10,20,30)
+        @test decode(b"\x83h\4d\0\1ad\0\1bd\0\1cd\0\1d") == (:a,:b,:c,:d)
+        @test_throws IncompleteData decode(b"\x83h\2a\1a\2tail")
+        @test decode_with_tail(b"\x83h\2a\1a\2") == ((1,2), b"")
+        @test decode_with_tail(b"\x83h\3a\x0aa\x14a\x1e") == ((10,20,30), b"")
+        @test decode_with_tail(b"\x83h\4d\0\1ad\0\1bd\0\1cd\0\1d") == ((:a,:b,:c,:d), b"")
+        @test decode_with_tail(b"\x83h\2a\1a\2tail") == ((1,2), b"tail")
         @test decodesmalltuple(b"h\0") == ((), b"")
         @test decodesmalltuple(b"h\0tail") == ((), b"tail")
         # it's a real tuple that has only 1 element
@@ -138,7 +159,7 @@ function run()::Void
 
     # decode large tuple (LARGE_TUPLE_EXT)
     @testset "decode large tuple" begin
-        (lt1, tail1) = decode(vcat(b"\x83", largetuple1, b"tail"))
+        (lt1, tail1) = decode_with_tail(vcat(b"\x83", largetuple1, b"tail"))
         @test tail1 == b"tail"
 
         (lt2, tail2) = decodelargetuple(largetuple1)
@@ -152,10 +173,13 @@ function run()::Void
     # decode small integer (SMALL_INTEGER_EXT)
     @testset "decode small integer" begin
         @test_throws IncompleteData decode(b"\x83a")
-        @test decode(b"\x83a\0") == (0, b"")
-        @test decode(b"\x83a\0tail") == (0, b"tail")
-        @test decode(b"\x83a\xff") == (255, b"")
-        @test decode(b"\x83a\xfftail") == (255, b"tail")
+        @test decode(b"\x83a\0") == 0
+        @test_throws IncompleteData decode(b"\x83a\0tail")
+        @test decode(b"\x83a\xff") == 255
+        @test decode_with_tail(b"\x83a\0") == (0, b"")
+        @test decode_with_tail(b"\x83a\0tail") == (0, b"tail")
+        @test decode_with_tail(b"\x83a\xff") == (255, b"")
+        @test decode_with_tail(b"\x83a\xfftail") == (255, b"tail")
         @test_throws IncompleteData decodesmallint(b"a")
         @test decodesmallint(b"a\0") == (0, b"")
         @test decodesmallint(b"a\0tail") == (0, b"tail")
@@ -169,12 +193,20 @@ function run()::Void
         @test_throws IncompleteData decode(b"\x83b\0")
         @test_throws IncompleteData decode(b"\x83b\0\0")
         @test_throws IncompleteData decode(b"\x83b\0\0\0")
-        @test decode(b"\x83b\0\0\0\0") == (0, [])
-        @test decode(b"\x83b\0\0\0\0tail") == (0, b"tail")
-        @test decode(b"\x83b\x7f\xff\xff\xff") == (2147483647, [])
-        @test decode(b"\x83b\x7f\xff\xff\xfftail") == (2147483647, b"tail")
-        @test decode(b"\x83b\xff\xff\xff\xff") == (-1, [])
-        @test decode(b"\x83b\xff\xff\xff\xfftail") == (-1, b"tail")
+        @test decode(b"\x83b\0\0\0\0") == 0
+        @test_throws IncompleteData decode(b"\x83b\0\0\0\0tail")
+        @test decode(b"\x83b\x7f\xff\xff\xff") == 2147483647
+        @test_throws IncompleteData decode(b"\x83b\x7f\xff\xff\xfftail")
+        @test decode(b"\x83b\xff\xff\xff\xff") == -1
+        @test_throws IncompleteData decode(b"\x83b\xff\xff\xff\xfftail")
+
+        @test decode_with_tail(b"\x83b\0\0\0\0") == (0, [])
+        @test decode_with_tail(b"\x83b\0\0\0\0tail") == (0, b"tail")
+        @test decode_with_tail(b"\x83b\x7f\xff\xff\xff") == (2147483647, [])
+        @test decode_with_tail(b"\x83b\x7f\xff\xff\xfftail") == (2147483647, b"tail")
+        @test decode_with_tail(b"\x83b\xff\xff\xff\xff") == (-1, [])
+        @test decode_with_tail(b"\x83b\xff\xff\xff\xfftail") == (-1, b"tail")
+
         @test_throws IncompleteData decodeint(b"b")
         @test_throws IncompleteData decodeint(b"b\0")
         @test_throws IncompleteData decodeint(b"b\0\0")
@@ -194,10 +226,16 @@ function run()::Void
         @test_throws IncompleteData decode(b"\x83m\0\0")
         @test_throws IncompleteData decode(b"\x83m\0\0\0")
         @test_throws IncompleteData decode(b"\x83m\0\0\0\1")
-        @test decode(b"\x83m\0\0\0\0") == (b"", b"")
-        @test decode(b"\x83m\0\0\0\0tail") == (b"", b"tail")
-        @test decode(b"\x83m\0\0\0\4data") == (b"data", b"")
-        @test decode(b"\x83m\0\0\0\4datatail") == (b"data", b"tail")
+        @test decode(b"\x83m\0\0\0\0") == b""
+        @test_throws IncompleteData decode(b"\x83m\0\0\0\0tail")
+        @test decode(b"\x83m\0\0\0\4data") == b"data"
+        @test_throws IncompleteData decode(b"\x83m\0\0\0\4datatail")
+
+        @test decode_with_tail(b"\x83m\0\0\0\0") == (b"", b"")
+        @test decode_with_tail(b"\x83m\0\0\0\0tail") == (b"", b"tail")
+        @test decode_with_tail(b"\x83m\0\0\0\4data") == (b"data", b"")
+        @test decode_with_tail(b"\x83m\0\0\0\4datatail") == (b"data", b"tail")
+
         @test decodebin(b"m\0\0\0\0") == (b"", b"")
         @test decodebin(b"m\0\0\0\0tail") == (b"", b"tail")
         @test decodebin(b"m\0\0\0\4data") == (b"data", b"")
@@ -237,10 +275,16 @@ function run()::Void
         @test_throws IncompleteData decode(b"\x83\x63\0\0\0\0\0")
         @test_throws IncompleteData decode(b"\x83\x63\0\0\0\0\0\0")
         @test_throws IncompleteData decode(b"\x83\x63\0\0\0\0\0\0\0")
-        @test decode(b"\x83\x63\0\0\0\0\0\0\0\0") == (0.0, b"")
-        @test decode(b"\x83\x63\0\0\0\0\0\0\0\0tail") == (0.0, b"tail")
-        @test decode(b"\x83\x63\x3f\xf8\0\0\0\0\0\0") == (1.5, b"")
-        @test decode(b"\x83\x63\x3f\xf8\0\0\0\0\0\0tail") == (1.5, b"tail")
+        @test decode(b"\x83\x63\0\0\0\0\0\0\0\0") == 0.0
+        @test_throws IncompleteData decode(b"\x83\x63\0\0\0\0\0\0\0\0tail")
+        @test decode(b"\x83\x63\x3f\xf8\0\0\0\0\0\0") == 1.5
+        @test_throws IncompleteData decode(b"\x83\x63\x3f\xf8\0\0\0\0\0\0tail")
+
+        @test decode_with_tail(b"\x83\x63\0\0\0\0\0\0\0\0") == (0.0, b"")
+        @test decode_with_tail(b"\x83\x63\0\0\0\0\0\0\0\0tail") == (0.0, b"tail")
+        @test decode_with_tail(b"\x83\x63\x3f\xf8\0\0\0\0\0\0") == (1.5, b"")
+        @test decode_with_tail(b"\x83\x63\x3f\xf8\0\0\0\0\0\0tail") == (1.5, b"tail")
+
         @test decodefloat(b"\x63\0\0\0\0\0\0\0\0") == (0.0, b"")
         @test decodefloat(b"\x63\0\0\0\0\0\0\0\0tail") == (0.0, b"tail")
         @test decodefloat(b"\x63\x3f\xf8\0\0\0\0\0\0") == (1.5, b"")
@@ -265,10 +309,16 @@ function run()::Void
         @test_throws IncompleteData decode(b"\x83F\0\0\0\0\0")
         @test_throws IncompleteData decode(b"\x83F\0\0\0\0\0\0")
         @test_throws IncompleteData decode(b"\x83F\0\0\0\0\0\0\0")
-        @test decode(b"\x83F\0\0\0\0\0\0\0\0") == (0.0, b"")
-        @test decode(b"\x83F\0\0\0\0\0\0\0\0tail") == (0.0, b"tail")
-        @test decode(b"\x83F?\xf8\0\0\0\0\0\0") == (1.5, b"")
-        @test decode(b"\x83F?\xf8\0\0\0\0\0\0tail") == (1.5, b"tail")
+        @test decode(b"\x83F\0\0\0\0\0\0\0\0") == 0.0
+        @test_throws IncompleteData decode(b"\x83F\0\0\0\0\0\0\0\0tail")
+        @test decode(b"\x83F?\xf8\0\0\0\0\0\0") == 1.5
+        @test_throws IncompleteData decode(b"\x83F?\xf8\0\0\0\0\0\0tail")
+
+        @test decode_with_tail(b"\x83F\0\0\0\0\0\0\0\0") == (0.0, b"")
+        @test decode_with_tail(b"\x83F\0\0\0\0\0\0\0\0tail") == (0.0, b"tail")
+        @test decode_with_tail(b"\x83F?\xf8\0\0\0\0\0\0") == (1.5, b"")
+        @test decode_with_tail(b"\x83F?\xf8\0\0\0\0\0\0tail") == (1.5, b"tail")
+
         @test decodenewfloat(b"F\0\0\0\0\0\0\0\0") == (0.0, b"")
         @test decodenewfloat(b"F\0\0\0\0\0\0\0\0tail") == (0.0, b"tail")
         @test decodenewfloat(b"F?\xf8\0\0\0\0\0\0") == (1.5, b"")
@@ -289,8 +339,12 @@ function run()::Void
         @test_throws IncompleteData decode(b"\x83n\0")
         @test_throws IncompleteData decode(b"\x83n\1\0")
         @test_throws IncompleteData decode(b"\x83n\2\0\0")
-        @test decode(b"\x83n\1\0\0") == (0, b"")
-        @test decode(b"\x83n\1\0\0tail") == (0, b"tail")
+
+        @test decode(b"\x83n\1\0\0") == 0
+        @test_throws IncompleteData decode(b"\x83n\1\0\0tail")
+
+        @test decode_with_tail(b"\x83n\1\0\0") == (0, b"")
+        @test decode_with_tail(b"\x83n\1\0\0tail") == (0, b"tail")
 
         @test decodesmallbigint(b"n\1\0\1") == (1, b"")
         @test decodesmallbigint(b"n\1\1\1") == (-1, b"")
@@ -307,8 +361,11 @@ function run()::Void
         @test_throws IncompleteData decode(b"\x83o\0\0\0\0")
         @test_throws IncompleteData decode(b"\x83o\0\0\0\1\0")
         @test_throws IncompleteData decode(b"\x83o\0\0\0\2\0\0")
-        @test decode(b"\x83o\0\0\0\1\0\0") == (0, b"")
-        @test decode(b"\x83o\0\0\0\1\0\0tail") == (0, b"tail")
+        @test decode(b"\x83o\0\0\0\1\0\0") == 0
+        @test_throws IncompleteData decode(b"\x83o\0\0\0\1\0\0tail")
+
+        @test decode_with_tail(b"\x83o\0\0\0\1\0\0") == (0, b"")
+        @test decode_with_tail(b"\x83o\0\0\0\1\0\0tail") == (0, b"tail")
 
         @test decodelargebigint(b"o\0\0\0\1\0\1") == (1, b"")
         @test decodelargebigint(b"o\0\0\0\1\1\1") == (-1, b"")
@@ -320,10 +377,16 @@ function run()::Void
     @testset "decode map" begin
         @test_throws IncompleteData decode(b"\x83t")
         @test_throws IncompleteData decode(b"\x83t\0")
-        @test decode(b"\x83t\0\0\0\0") == (Dict(), b"")
-        @test decode(b"\x83t\0\0\0\1d\0\1aa\2") == (Dict(:a => 2), b"")
-        @test decode(b"\x83t\0\0\0\1d\0\1at\0\0\0\1d\0\1aa\2") == (Dict(:a => Dict(:a => 2)), b"")
-        @test decode(b"\x83t\0\0\0\2d\0\1aa\2k\0\1bj") == (Dict(:a => 2, b"b" => []), b"")
+
+        @test decode(b"\x83t\0\0\0\0") == Dict()
+        @test decode(b"\x83t\0\0\0\1d\0\1aa\2") == Dict(:a => 2)
+        @test decode(b"\x83t\0\0\0\1d\0\1at\0\0\0\1d\0\1aa\2") == Dict(:a => Dict(:a => 2))
+        @test decode(b"\x83t\0\0\0\2d\0\1aa\2k\0\1bj") == Dict(:a => 2, b"b" => [])
+
+        @test decode_with_tail(b"\x83t\0\0\0\0") == (Dict(), b"")
+        @test decode_with_tail(b"\x83t\0\0\0\1d\0\1aa\2") == (Dict(:a => 2), b"")
+        @test decode_with_tail(b"\x83t\0\0\0\1d\0\1at\0\0\0\1d\0\1aa\2") == (Dict(:a => Dict(:a => 2)), b"")
+        @test decode_with_tail(b"\x83t\0\0\0\2d\0\1aa\2k\0\1bj") == (Dict(:a => 2, b"b" => []), b"")
 
         @test decodemap(b"t\0\0\0\0tail") == (Dict(), b"tail")
         @test decodemap(b"t\0\0\0\1d\0\1aa\2tail") == (Dict(:a => 2), b"tail")
