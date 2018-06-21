@@ -111,6 +111,7 @@ function encodeterm(term::Integer)
 end
 
 function encodeterm(term::Float64)
+    return vcat(newfloattag, hex2bytes(num2hex(term)))
 end
 
 function encodeterm(term::Dict)

@@ -110,7 +110,7 @@ function run()::Void
     end
 
     # decode list (LIST_EXT)
-    @testset "decode list" begin
+        @testset "decode list" begin
         @test decode(b"\x83j") == ([], b"")
         @test decode(b"\x83l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedj") == ([1,:a,3,nothing], b"")
         @test decodelist(b"l\0\0\0\4a\1d\0\1aa\3d\0\x09undefinedj") == ([1,:a,3,nothing], b"")
@@ -227,9 +227,32 @@ function run()::Void
         #@test decode(b"\x83M\0\0\0\1\1\x80tail") == (b"\1", b"tail")
     end
 
-    # decode float (FLOAT_EXT)
+    # decode new float (NEW_FLOAT_EXT)
     @testset "decode float" begin
-        # XXX that is represented by its sprintf'ed string...
+        @test_throws IncompleteData decode(b"\x83\x63")
+        @test_throws IncompleteData decode(b"\x83\x63\0")
+        @test_throws IncompleteData decode(b"\x83\x63\0\0")
+        @test_throws IncompleteData decode(b"\x83\x63\0\0\0")
+        @test_throws IncompleteData decode(b"\x83\x63\0\0\0\0")
+        @test_throws IncompleteData decode(b"\x83\x63\0\0\0\0\0")
+        @test_throws IncompleteData decode(b"\x83\x63\0\0\0\0\0\0")
+        @test_throws IncompleteData decode(b"\x83\x63\0\0\0\0\0\0\0")
+        @test decode(b"\x83\x63\0\0\0\0\0\0\0\0") == (0.0, b"")
+        @test decode(b"\x83\x63\0\0\0\0\0\0\0\0tail") == (0.0, b"tail")
+        @test decode(b"\x83\x63\x3f\xf8\0\0\0\0\0\0") == (1.5, b"")
+        @test decode(b"\x83\x63\x3f\xf8\0\0\0\0\0\0tail") == (1.5, b"tail")
+        @test decodefloat(b"\x63\0\0\0\0\0\0\0\0") == (0.0, b"")
+        @test decodefloat(b"\x63\0\0\0\0\0\0\0\0tail") == (0.0, b"tail")
+        @test decodefloat(b"\x63\x3f\xf8\0\0\0\0\0\0") == (1.5, b"")
+        @test decodefloat(b"\x63\x3f\xf8\0\0\0\0\0\0tail") == (1.5, b"tail")
+        @test_throws IncompleteData decodefloat(b"\x63")
+        @test_throws IncompleteData decodefloat(b"\x63\0")
+        @test_throws IncompleteData decodefloat(b"\x63\0\0")
+        @test_throws IncompleteData decodefloat(b"\x63\0\0\0")
+        @test_throws IncompleteData decodefloat(b"\x63\0\0\0\0")
+        @test_throws IncompleteData decodefloat(b"\x63\0\0\0\0\0")
+        @test_throws IncompleteData decodefloat(b"\x63\0\0\0\0\0\0")
+        @test_throws IncompleteData decodefloat(b"\x63\0\0\0\0\0\0\0")
     end
 
     # decode new float (NEW_FLOAT_EXT)
