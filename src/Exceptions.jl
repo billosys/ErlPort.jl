@@ -29,39 +29,39 @@ module Exceptions
 export IncompleteData, UnknownProtocolVersion, InvalidCompressedTag,
 UnsupportedData, UnsupportedType, NotImplemented
 
-type IncompleteData <: Exception
+struct IncompleteData <: Exception
     var
 end
 
-type UnknownProtocolVersion <: Exception
+struct UnknownProtocolVersion <: Exception
     var
 end
 
-type InvalidCompressedTag <: Exception
+struct InvalidCompressedTag <: Exception
     var
 end
 
-type InvalidCompressionLevel <: Exception
+struct InvalidCompressionLevel <: Exception
     var
 end
 
-type UnsupportedData <: Exception
+struct UnsupportedData <: Exception
     var
 end
 
-type UnsupportedType <: Exception
+struct UnsupportedType <: Exception
     var
 end
 
-type InvalidTupleArity <: Exception
+struct InvalidTupleArity <: Exception
     var
 end
 
-type InvalidIntLength <: Exception
+struct InvalidIntLength <: Exception
     var
 end
 
-type NotImplemented <: Exception
+struct NotImplemented <: Exception
 end
 
 end

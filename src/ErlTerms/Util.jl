@@ -1,5 +1,5 @@
 # 1-byte unsigned integer -> UInt64
-function size1unpack(bytes::Array{UInt8,1})
+function size1unpack(bytes::AbstractArray{UInt8,1})
     size1unpack(view(bytes, 1:length(bytes)))
 end
 
@@ -12,7 +12,7 @@ function size1unpack(byte::UInt8)
 end
 
 # 2-bytes unsigned integer in big endian format -> UInt64
-function size2unpack(bytes::Array{UInt8,1})
+function size2unpack(bytes::AbstractArray{UInt8,1})
     size2unpack(view(bytes, 1:length(bytes)))
 end
 
@@ -26,7 +26,7 @@ function size2unpack(bytes::SubArray{UInt8})
 end
 
 # 4-bytes unsigned integer in big endian format -> UInt64
-function size4unpack(bytes::Array{UInt8,1})
+function size4unpack(bytes::AbstractArray{UInt8,1})
     size4unpack(view(bytes, 1:length(bytes)))
 end
 
@@ -39,7 +39,7 @@ function size4unpack(bytes::SubArray{UInt8})
     end
 end
 
-function int1unpack(bytes::Array{UInt8,1})
+function int1unpack(bytes::AbstractArray{UInt8,1})
     int1unpack(view(bytes, 1:length(bytes)))
 end
 
@@ -51,7 +51,7 @@ function int1unpack(byte::UInt8)
     Int(byte)
 end
 
-function int4unpack(bytes::Array{UInt8,1})
+function int4unpack(bytes::AbstractArray{UInt8,1})
     int4unpack(view(bytes, 1:length(bytes)))
 end
 
@@ -59,7 +59,7 @@ function int4unpack(bytes::SubArray{UInt8})
     Int(reinterpret(Int32, reverse(view(bytes, max(1, length(bytes) - 4):length(bytes))))[1])
 end
 
-function floatunpack(bytes::Array{UInt8,1})
+function floatunpack(bytes::AbstractArray{UInt8,1})
     floatunpack(view(bytes, 1:length(bytes)))
 end
 
@@ -97,7 +97,7 @@ function charsignedint4pack(integer::Integer)
     charintpack(integer, 4)
 end
 
-function lencheck(bytes::Array{UInt8,1}, limit::Int)
+function lencheck(bytes::AbstractArray{UInt8,1}, limit::Int)
     lencheck(view(bytes, 1:length(bytes)), limit)
 end
 
@@ -106,7 +106,7 @@ function lencheck(bytes::SubArray{UInt8}, limit::Int)
     lencheck(len, len < limit, bytes)
 end
 
-function lencheck(len::UInt64, limit::UInt64, bytes::Array{UInt8,1})
+function lencheck(len::UInt64, limit::UInt64, bytes::AbstractArray{UInt8,1})
     lencheck(len, limit, view(bytes, 1:length(bytes)))
 end
 
@@ -114,7 +114,7 @@ function lencheck(len::UInt64, limit::UInt64, bytes::SubArray{UInt8})
     lencheck(limit, len < limit, bytes)
 end
 
-function lencheck(len::UInt64, pred::Bool, bytes::Array{UInt8,1})
+function lencheck(len::UInt64, pred::Bool, bytes::AbstractArray{UInt8,1})
     lencheck(len, pred, view(bytes, 1:length(bytes)))
 end
 
@@ -133,6 +133,6 @@ function compressterm(encodedterm, compression::Int)
     throw(NotImplemented())
 end
 
-function decompressterm(bytes::Array{UInt8,1})
+function decompressterm(bytes::AbstractArray{UInt8,1})
     throw(NotImplemented())
 end

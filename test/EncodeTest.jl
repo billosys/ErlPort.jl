@@ -1,10 +1,10 @@
 module EncodeTest
 
-using Base.Test
+using Test
 using ErlPort.Exceptions
 using ErlPort.ErlTerms.Encode
 
-function run()::Void
+function run()::Nothing
     # tests for supporting functions
     @testset begin
         @test charint4pack(1) == b"\x00\x00\x00\x01"

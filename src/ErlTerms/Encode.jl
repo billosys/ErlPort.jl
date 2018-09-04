@@ -42,14 +42,14 @@ end
 
 function encodeboolorsym(term)
     str = string(term)
-    vcat(atomtag, charint2pack(length(str)), convert(Array{UInt8}, str))
+    vcat(atomtag, charint2pack(length(str)), codeunits(str))
 end
 
 function encodeterm(term::Symbol)
     encodeboolorsym(term)
 end
 
-function encodeterm(term::Void)
+function encodeterm(term::Nothing)
     encodeboolorsym(:undefined)
 end
 
@@ -57,12 +57,12 @@ function encodeterm(term::Bool)
     encodeboolorsym(term)
 end
 
-function encodeterm(term::Vector{UInt8})
+function encodeterm(term::T) where {T <: AbstractVector{UInt8}}
     local length_pack::Vector{UInt8} = charint4pack(length(term))
     return vcat(bintag, length_pack, term)
 end
 
-function encodeterm(term::Vector)
+function encodeterm(term::AbstractVector)
     local len::UInt32 = length(term)
     if len > typemax(UInt32)
         throw(InvalidListLength(len))
@@ -74,7 +74,7 @@ end
 
 function encodeterm(term::String)
     local length_pack::Vector{UInt8} = charint4pack(length(term))
-    local binary::Vector{UInt8} = convert(Vector{UInt8}, term)
+    local binary::AbstractVector{UInt8} = codeunits(term)
     return vcat(bintag, length_pack, binary)
 end
 
@@ -119,7 +119,7 @@ function encodeterm(term::Float64)
     if isnan(term)
         return encodeterm(:nan)
     else
-        return vcat(newfloattag, hex2bytes(num2hex(term)))
+        return vcat(newfloattag, hex2bytes(string(reinterpret(Unsigned, term), base = 16, pad = sizeof(term) * 2)))
     end
 end
 
