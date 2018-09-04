@@ -43,7 +43,7 @@ size1unpack, size2unpack, size4unpack # for tests only XXX: do we really need th
 include("Tags.jl")
 include("Util.jl")
 
-function decode(bytes::Array{UInt8,1})
+function decode(bytes::AbstractArray{UInt8,1})
     (result, acc) = decode(view(bytes, 1:length(bytes)))
     if length(acc) > 0
         throw(IncompleteData(acc))
@@ -51,7 +51,7 @@ function decode(bytes::Array{UInt8,1})
     return result
 end
 
-function decode_with_tail(bytes::Array{UInt8, 1})
+function decode_with_tail(bytes::AbstractArray{UInt8, 1})
     decode(view(bytes, 1:length(bytes)))
 end
 
@@ -71,7 +71,7 @@ function decode(unsupported)
     throw(UnsupportedType(unsupported))
 end
 
-function decodeterm(bytes::Array{UInt8,1})
+function decodeterm(bytes::AbstractArray{UInt8,1})
     decodeterm(view(bytes, 1:length(bytes)))
 end
 
@@ -115,7 +115,7 @@ function decodeterm(acc::Array, byte::UInt8)
     vcat(acc, decodeterm([byte]))
 end
 
-function decodeatom(bytes::Array{UInt8,1})
+function decodeatom(bytes::AbstractArray{UInt8,1})
     decodeatom(view(bytes, 1:length(bytes)))
 end
 
@@ -136,7 +136,7 @@ function decodeatom(bytes::SubArray{UInt8})
     end
 end
 
-function decodenil(bytes::Array{UInt8,1})
+function decodenil(bytes::AbstractArray{UInt8,1})
     decodenil(view(bytes, 1:length(bytes)))
 end
 
@@ -145,7 +145,7 @@ function decodenil(bytes::SubArray{UInt8})
     return ([], view(bytes, 2:length(bytes)))
 end
 
-function decodestring(bytes::Array{UInt8,1})
+function decodestring(bytes::AbstractArray{UInt8,1})
     decodestring(view(bytes, 1:length(bytes)))
 end
 
@@ -155,7 +155,7 @@ function decodestring(bytes::SubArray{UInt8})
     (bytes[4:unpackedlen], view(bytes, unpackedlen+1:length(bytes)))
 end
 
-function decodesmallint(bytes::Array{UInt8,1})::Tuple{UInt8, Array{UInt8,1}}
+function decodesmallint(bytes::AbstractArray{UInt8,1})::Tuple{UInt8, Array{UInt8,1}}
     decodesmallint(view(bytes, 1:length(bytes)))
 end
 
@@ -164,7 +164,7 @@ function decodesmallint(bytes::SubArray{UInt8})
     (int1unpack(bytes[2]), view(bytes, 3:length(bytes)))
 end
 
-function decodeint(bytes::Array{UInt8,1})
+function decodeint(bytes::AbstractArray{UInt8,1})
     decodeint(view(bytes, 1:length(bytes)))
 end
 
@@ -173,7 +173,7 @@ function decodeint(bytes::SubArray{UInt8})
     (int4unpack(view(bytes, 2:5)), view(bytes, 6:length(bytes)))
 end
 
-function decodebin(bytes::Array{UInt8,1})
+function decodebin(bytes::AbstractArray{UInt8,1})
     decodebin(view(bytes, 1:length(bytes)))
 end
 
@@ -183,7 +183,7 @@ function decodebin(bytes::SubArray{UInt8})
     (bytes[6:unpackedlen], view(bytes, unpackedlen+1:length(bytes)))
 end
 
-function decodenewfloat(bytes::Array{UInt8,1})
+function decodenewfloat(bytes::AbstractArray{UInt8,1})
     decodenewfloat(view(bytes, 1:length(bytes)))
 end
 
@@ -192,7 +192,7 @@ function decodenewfloat(bytes::SubArray{UInt8})
     (floatunpack(view(bytes, 2:9)), view(bytes, 10:length(bytes)))
 end
 
-function decodelist(bytes::Array{UInt8,1})
+function decodelist(bytes::AbstractArray{UInt8,1})
     decodelist(view(bytes, 1:length(bytes)))
 end
 
@@ -220,7 +220,7 @@ function converttoarray(len::UInt64, tail::SubArray{UInt8})
     (results, tail)
 end
 
-function decodesmalltuple(bytes::Array{UInt8,1})
+function decodesmalltuple(bytes::AbstractArray{UInt8,1})
     decodesmalltuple(view(bytes, 1:length(bytes)))
 end
 
@@ -229,7 +229,7 @@ function decodesmalltuple(bytes::SubArray{UInt8})
     converttotuple(size1unpack(bytes[2]), view(bytes, 3:length(bytes)))
 end
 
-function decodelargetuple(bytes::Array{UInt8,1})
+function decodelargetuple(bytes::AbstractArray{UInt8,1})
     decodelargetuple(view(bytes, 1:length(bytes)))
 end
 
@@ -246,7 +246,7 @@ function converttotuple(len::UInt64, tail::SubArray{UInt8})
     (tuple(results...), tail)
 end
 
-function decodesmallbigint(bytes::Array{UInt8,1})
+function decodesmallbigint(bytes::AbstractArray{UInt8,1})
     decodesmallbigint(view(bytes, 1:length(bytes)))
 end
 
@@ -258,7 +258,7 @@ function decodesmallbigint(bytes::SubArray{UInt8})
     (result, view(bytes, bisize+4:length(bytes)))
 end
 
-function decodelargebigint(bytes::Array{UInt8,1})
+function decodelargebigint(bytes::AbstractArray{UInt8,1})
     decodelargebigint(view(bytes, 1:length(bytes)))
 end
 
@@ -270,7 +270,7 @@ function decodelargebigint(bytes::SubArray{UInt8})
     (result, view(bytes, bisize+7:length(bytes)))
 end
 
-function computebigint(len::UInt64, coefficients::Array{UInt8,1}, sign::UInt8)
+function computebigint(len::UInt64, coefficients::AbstractArray{UInt8,1}, sign::UInt8)
     computebigint(len::UInt64, view(coefficients, 1:length(coefficients)), sign)
 end
 
@@ -279,7 +279,7 @@ function computebigint(len::UInt64, coefficients::SubArray{UInt8}, sign::UInt8)
     return(sign > 0 ? -result : result)
 end
 
-function decodemap(bytes::Array{UInt8,1})
+function decodemap(bytes::AbstractArray{UInt8,1})
     decodemap(view(bytes, 1:length(bytes)))
 end
 
@@ -300,13 +300,13 @@ function decodemap(bytes::SubArray{UInt8})
     (result, bytes)
 end
 
-function decodefloat(bytes::Array{UInt8,1})::Tuple{Float64, Vector{UInt8}}
+function decodefloat(bytes::AbstractArray{UInt8,1})::Tuple{Float64, Vector{UInt8}}
     decodefloat(view(bytes, 1:length(bytes)))
 end
 
 function decodefloat(bytes::SubArray{UInt8})
     len = lencheck(bytes, 9)
-    result = hex2num(bytes2hex(view(bytes, 2:9)))
+    result = reinterpret(Float64, parse(UInt64, bytes2hex(view(bytes, 2:9)), base =16))
     (result, view(bytes, 10:length(bytes)))
 end
 

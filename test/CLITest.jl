@@ -2,7 +2,7 @@ module CLITest
 
 using ErlPort.CLI
 
-function run()::Void
+function run()::Nothing
     return nothing
 end # run()
 

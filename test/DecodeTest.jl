@@ -1,10 +1,10 @@
 module DecodeTest
 
-using Base.Test
+using Test
 using ErlPort.Exceptions
 using ErlPort.ErlTerms.Decode
 
-function run()::Void
+function run()::Nothing
 
     # XXX Do we need to test REFERENCE_EXT, PORT_EXT, PID_EXT, NEW_REFERENCE_EXT, FUN_EXT, NEW_FUN_EXT, EXPORT_EXT
 
