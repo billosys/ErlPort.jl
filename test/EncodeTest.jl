@@ -82,6 +82,13 @@ function run()::Nothing
         @test encodeterm("") == b"m\0\0\0\0"
         @test encodeterm("something") == b"m\0\0\0\x09something"
         @test encodeterm("nothing") == b"m\0\0\0\7nothing"
+
+        @test encode(SubString("")) == b"\x83m\0\0\0\0"
+        @test encode(SubString("something")) == b"\x83m\0\0\0\x09something"
+        @test encode(SubString("nothing")) == b"\x83m\0\0\0\7nothing"
+        @test encodeterm(SubString("")) == b"m\0\0\0\0"
+        @test encodeterm(SubString("something")) == b"m\0\0\0\x09something"
+        @test encodeterm(SubString("nothing")) == b"m\0\0\0\7nothing"
     end
 
     # tests for tuples

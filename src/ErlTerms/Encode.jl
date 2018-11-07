@@ -72,7 +72,7 @@ function encodeterm(term::AbstractVector)
     return vcat(listtag, length_pack, listmembers, niltag)
 end
 
-function encodeterm(term::String)
+function encodeterm(term::AbstractString)
     local length_pack::Vector{UInt8} = charint4pack(length(term))
     local binary::AbstractVector{UInt8} = codeunits(term)
     return vcat(bintag, length_pack, binary)
