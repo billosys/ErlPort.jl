@@ -1,6 +1,6 @@
 name = "ErlPort"
 uuid = "572bf9c6-b013-11e8-0682-13c52dd2789a"
-authors = ["Oliver Mate Torteli <oliver@cursorinsight.com>"]
+authors = ["Dreki Þórgísl <dreki@billo.systems>", "Duncan McGreggor <oubiwann@gmail.com>", "Oliver Mate Torteli <oliver@cursorinsight.com>"]
 version = "0.4.0"
 
 [deps]
